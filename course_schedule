@@ -1,0 +1,28 @@
+Day 1 - Generating synthetic data
+Lecture 1 - What is synthetic data
+- The general idea: What is it, what can it be used for?
+- The privacy-utility trade-off (different use-cases require different approaches)
+- The link with data simulation
+
+Lecture 2 - Generating synthetic data
+- The procedure (partially synthetic data)
+- Sequential regression / fully conditional specification
+- Which models to use (parametric versus non-parametric).
+
+Day 2 - Evaluating synthetic data
+Lecture 3 - Assessing the utility of synthetic data
+- General utility measures
+- Specific utility measures
+- Density ratio perspective
+
+Lecture 4 - Privacy and disclosure risk assessment
+- TBD
+
+Day 3 - Advanced topics in data synthesis
+Lecture 5 - Inferences from synthetic data
+- Getting the variances right
+
+Lecture 6 - Advanced topics
+- Advanced generative models (deep learning approaches)
+- Differential privacy
+- ? Synthesis of text data
