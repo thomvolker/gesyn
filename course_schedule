@@ -1,28 +1,85 @@
 Day 1 - Generating synthetic data
-Lecture 1 - What is synthetic data
+Lecture 1 - What is synthetic data - 45 min
 - The general idea: What is it, what can it be used for?
+- Link with traditional sdc approaches
+- Link with missing data imputation
 - The privacy-utility trade-off (different use-cases require different approaches)
 - The link with data simulation
 
-Lecture 2 - Generating synthetic data
-- The procedure (partially synthetic data)
+5 minute break
+
+Practical 1 - A simple data generation example - 60 minutes
+- Introduction to data generation: `rnorm()`, `rbinom()`
+- Low-level introduction to fully conditional specification: three level sequential procedure.
+- Discussion
+
+15 minute break
+
+Lecture 2 - Generating synthetic data - 45 minutes
+- Distinction between fully and partially synthetic data: Rubin 1987, impute the population.
+- The general idea: decide which variables to synthesize; sequential prediction models to create synthetic values (i.e., sequential regression/fully conditional specification)
 - Sequential regression / fully conditional specification
-- Which models to use (parametric versus non-parametric).
+- Advantages and disadvantages
+
+5 minute break
+
+Practical 2 - Generating synthetic data - 60 minutes
+- Generating high quality synthetic data in `R`
+- Different models for different variables
+- Parametric and non-parametric synthesis
+- Discussion
 
 Day 2 - Evaluating synthetic data
-Lecture 3 - Assessing the utility of synthetic data
+
+Lecture 3 - Inferences from synthetic data - 45 minutes
+- Which variables to include in synthesis (congeniality)
+- Getting the variances right
+
+5 minute break
+
+Practical 3 - Inferences from synthetic data
+- Analyses on synthetic data
+- Pooling results (or not)
+
+15 minute break
+
+Lecture 4 - Assessing utility and privacy risks of synthetic data - 45 minutes
 - General utility measures
 - Specific utility measures
 - Density ratio perspective
+- Privacy considerations for fully and partially synthetic data
 
-Lecture 4 - Privacy and disclosure risk assessment
-- TBD
+5 minute break
+
+Practical 4 - Privacy and utility assessment - 60 minutes
+- Calculate $pMSE$, confidence interval overlap
+- Use density ratio approach
+- Privacy considerations
 
 Day 3 - Advanced topics in data synthesis
-Lecture 5 - Inferences from synthetic data
-- Getting the variances right
 
-Lecture 6 - Advanced topics
+15 minute break
+
+Lecture 5 - Improving synthetic data quality - 45 minutes
+- Parametric versus nonparametric synthesis
+- Go fully Bayesian (fcs with brms/rstan); no details, just intro, show that it is a possibility.
+- Complex data structures (e.g., passive imputation, logical constraints)
+
+5 minute break
+
+Practical 5 - Improved data synthesis - 60 minutes
+- Modelling complex data structures
+- Discussion
+
+15 minute break
+
+Lecture 6 - Advanced topics - 45 minutes
 - Advanced generative models (deep learning approaches)
 - Differential privacy
 - ? Synthesis of text data
+
+5 minute break
+
+Practical 6 / Q&A - 60 minutes
+- Perhaps optional practical + Q&A
+- Discussion
