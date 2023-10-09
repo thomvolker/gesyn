@@ -1,0 +1,6 @@
+title: gesyn
+logo: /assets/img/logo.svg
+description: Materials for Applied Data Science profile course INFOMDA2 <i>Battling the curse of dimensionality</i>.
+theme: jekyll-theme-minimal
+github:
+    is_project_page: false
