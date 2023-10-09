@@ -58,12 +58,10 @@ Practical 4 - Privacy and utility assessment - 60 minutes
 
 Day 3 - Advanced topics in data synthesis
 
-15 minute break
-
 Lecture 5 - Improving synthetic data quality - 45 minutes
-- Parametric versus nonparametric synthesis
 - Go fully Bayesian (fcs with brms/rstan); no details, just intro, show that it is a possibility.
 - Complex data structures (e.g., passive imputation, logical constraints)
+- Advanced generative models (deep learning/GANs)
 
 5 minute break
 

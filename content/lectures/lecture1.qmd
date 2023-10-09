@@ -1,0 +1,71 @@
+---
+title: "Synthetic data: Generation and Evaluation"
+author: "Thom Benjamin Volker<br>Utrecht University, Statistics Netherlands"
+affiliation: "Utrecht University, Statistics Netherlands"
+format: revealjs
+---
+
+## Overview
+
+__Lecture 1 (day 1):__ Introduction to synthetic data
+
+__Lecture 2 (day 1):__ Generating synthetic data
+
+__Lecture 3 (day 2):__ Inferences from synthetic data
+
+__Lecture 4 (day 2):__ Evaluating the privacy-utility trade-off
+
+__Lecture 5 (day 3):__ Improving synthetic data quality
+
+__Lecture 6 (day 3):__ Advanced topics in data synthesis
+
+
+## Introduction
+
+:::: {.columns}
+
+::: {.column width="40%"}
+![](files/me_square.jpg)
+:::
+
+::: {.column width="60%"}
+- MSc. in Methods and Statistics & Sociology
+
+- PhD candidate at Utrecht University and Statistics Netherlands
+
+  - Aim: Advancing privacy-aware synthetic data generation
+
+:::
+
+::::
+
+My research revolves around a weird mix of things I find interesting (mainly Bayesian statistics, data privacy, synthetic data)
+
+
+# Course webpage
+
+[This is a link](thomvolker.github.io)
+
+# Lecture 1 
+
+Introduction to synthetic data
+
+
+
+## Synthetic data
+
+[this person does not exist](https://this-person-does-not-exist.com/en)
+
+[chatgpt](https://chat.openai.com/)
+
+[DALL-E](https://labs.openai.com/)
+
+## Statistical disclosure limitation
+
+## Why synthetic data then?
+
+## Literature
+
+
+
+
