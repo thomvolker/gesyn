@@ -2,7 +2,10 @@
 title: "Synthetic data: Generation and Evaluation"
 author: "Thom Benjamin Volker<br>Utrecht University, Statistics Netherlands"
 affiliation: "Utrecht University, Statistics Netherlands"
-format: revealjs
+format: 
+  revealjs:
+    slide-number: true
+    df-print: kable
 ---
 
 ## Overview
@@ -22,6 +25,8 @@ __Lecture 6 (day 3):__ Advanced topics in data synthesis
 
 ## Introduction
 
+Thom Volker ([t.b.volker@uu.nl](mailto:t.b.volker@uu.nl))
+
 :::: {.columns}
 
 ::: {.column width="40%"}
@@ -39,26 +44,197 @@ __Lecture 6 (day 3):__ Advanced topics in data synthesis
 
 ::::
 
-My research revolves around a weird mix of things I find interesting (mainly Bayesian statistics, data privacy, synthetic data)
+My research revolves around an odd mix of things I find interesting (e.g., Bayesian stats, data privacy, synthetic data)
 
 
 # Course webpage
 
-[This is a link](thomvolker.github.io)
+All materials are (and will stay) online!
+[https://thomvolker.github.io/gesyn](https://thomvolker.github.io/gesyn)
 
 # Lecture 1 
 
 Introduction to synthetic data
 
+- Why is it useful?
+
+- What is synthetic data?
+
+- Can't we use other methods?
+
+- How is synthetic data related to other statistical techniques?
+
+- How do we balance high-quality synthetic data with minimum disclosure risks?
+
+# Example
+
+Dutch Burn Center Beverwijk
+
+## Other use-cases of synthetic data
+
+- Open science workflows
+
+- Temporary surrogate while waiting for real data
+
+- Educational purposes
+
+- Model building pipelines
 
 
-## Synthetic data
+## What is synthetic data?
 
 [this person does not exist](https://this-person-does-not-exist.com/en)
 
 [chatgpt](https://chat.openai.com/)
 
 [DALL-E](https://labs.openai.com/)
+
+# Synthetic data
+
+::: {.callout-tip title="Definition"}
+
+Synthetic data is data that is generated from a model: _fake data, generated data, simulated data, digital twin_. 
+
+_As opposed to real, natural, collected data_
+
+::: 
+
+
+# To create synthetic data, you need a __generative model__
+
+## Generative model
+
+$$f(\boldsymbol{X} | \theta)$$
+
+- A model $f$ for the data $\boldsymbol{X}$;
+
+- With parameters $\theta$;
+
+- That are estimated/fitted/learned from real data.
+
+::: {.callout-tip title="Definition"}
+
+Generative models learn the distribution of the data $\boldsymbol{X}$ given parameters $\theta$.
+
+::: 
+
+## Example: Normal distribution
+
+A normal distribution with parameters $\theta = \{\mu, \sigma\}$.
+
+```{r}
+#| label: normal_data
+#| echo: false
+
+set.seed(123)
+X <- data.frame(X = rnorm(200, 1, 2))
+psych::describe(X) |> dplyr::select(n, mean, sd) |> round(3)
+```
+
+```{r}
+#| label: generate-normal
+#| echo: true
+n <- 200
+mu <- 0.983
+sigma <- 1.886
+
+X_syn <- rnorm(n = n, mean = mu, sd = sigma)
+```
+
+## 
+
+```{r}
+#| label: plot-normal
+#| echo: false
+#| fig-align: center
+library(ggplot2)
+
+data.frame(X = c(X$X, X_syn),
+           group = rep(c("Real", "Synthetic"), c(100, 100))) |>
+  ggplot(aes(x = X, col = group, fill = group)) +
+  geom_density(size = 1, alpha = 0.2) +
+  theme_minimal() +
+  scale_color_brewer(palette = "Blues") +
+  scale_fill_brewer(palette = "Blues") +
+  xlab(expression(italic(X))) +
+  ylab(NULL) +
+  theme(legend.title = element_blank())
+```
+
+## Example: Histogram with bins and proportion
+
+Histogram with $\theta = \{\text{bins}, \pi\}$
+
+```{r}
+#| label: histogram-prop
+#| echo: false
+X <- sample(1:7, size = 200, replace = TRUE, prob = dnorm(qnorm(1:7/8)))
+X_df <- matrix(table(X)) |>
+  t() |>
+  data.frame() |>
+  setNames(1:7)
+
+X_df/200
+```
+
+<br>
+<br>
+
+```{r}
+#| label: histogram-params
+#| echo: true
+n <- 200
+bins <- 1:7
+props <- c(table(X)) / n
+
+X_syn <- sample(bins, size = 200, replace = TRUE, prob = props)
+```
+
+
+##
+
+```{r}
+data.frame(X = c(X, X_syn),
+           group = rep(c("Real", "Synthetic"), c(100, 100))) |>
+  ggplot(aes(x = X, fill = group)) +
+  geom_histogram(position = "dodge") +
+  theme_minimal() +
+  scale_fill_brewer(palette = "Blues") +
+  xlab(expression(italic(X))) +
+  ylab(NULL) +
+  theme(legend.title = element_blank())
+```
+
+## Example: Neural Network
+
+Every arrow is linked to a parameter (hundreds/thousands of parameters)
+
+[![Neural Network](files/neural_net.png)](https://tikz.net/autoencoder/)
+
+## Many methods for data synthesis
+
+Some are simple and some are complex.
+
+<br>
+
+Some work better than others. 
+
+<br>
+
+All have their pros and cons.
+
+<br>
+
+More about this later.
+
+# Traditional disclosure control methods
+
+
+
+
+
+
+
 
 ## Statistical disclosure limitation
 

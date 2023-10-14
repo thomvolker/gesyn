@@ -29,6 +29,71 @@
       margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
       vertical-align: middle;
     }
+    /* CSS for syntax highlighting */
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      { color: #003b4f; background-color: #f1f3f5; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span { color: #003b4f; } /* Normal */
+    code span.al { color: #ad0000; } /* Alert */
+    code span.an { color: #5e5e5e; } /* Annotation */
+    code span.at { color: #657422; } /* Attribute */
+    code span.bn { color: #ad0000; } /* BaseN */
+    code span.bu { } /* BuiltIn */
+    code span.cf { color: #003b4f; } /* ControlFlow */
+    code span.ch { color: #20794d; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #5e5e5e; } /* Comment */
+    code span.cv { color: #5e5e5e; font-style: italic; } /* CommentVar */
+    code span.do { color: #5e5e5e; font-style: italic; } /* Documentation */
+    code span.dt { color: #ad0000; } /* DataType */
+    code span.dv { color: #ad0000; } /* DecVal */
+    code span.er { color: #ad0000; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #ad0000; } /* Float */
+    code span.fu { color: #4758ab; } /* Function */
+    code span.im { color: #00769e; } /* Import */
+    code span.in { color: #5e5e5e; } /* Information */
+    code span.kw { color: #003b4f; } /* Keyword */
+    code span.op { color: #5e5e5e; } /* Operator */
+    code span.ot { color: #003b4f; } /* Other */
+    code span.pp { color: #ad0000; } /* Preprocessor */
+    code span.sc { color: #5e5e5e; } /* SpecialChar */
+    code span.ss { color: #20794d; } /* SpecialString */
+    code span.st { color: #20794d; } /* String */
+    code span.va { color: #111111; } /* Variable */
+    code span.vs { color: #20794d; } /* VerbatimString */
+    code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
   </style>
   <link rel="stylesheet" href="lecture1_files/libs/revealjs/dist/theme/quarto.css" id="theme">
   <link href="lecture1_files/libs/revealjs/plugin/quarto-line-highlight/line-highlight.css" rel="stylesheet">
@@ -347,6 +412,7 @@ Thom Benjamin Volker<br>Utrecht University, Statistics Netherlands
 </section>
 <section id="introduction" class="slide level2">
 <h2>Introduction</h2>
+<p>Thom Volker (<a href="mailto:t.b.volker@uu.nl">t.b.volker@uu.nl</a>)</p>
 <div class="columns">
 <div class="column" style="width:40%;">
 <p><img data-src="files/me_square.jpg"></p>
@@ -360,23 +426,194 @@ Thom Benjamin Volker<br>Utrecht University, Statistics Netherlands
 </ul>
 </div>
 </div>
-<p>My research revolves around a weird mix of things I find interesting (mainly Bayesian statistics, data privacy, synthetic data)</p>
+<p>My research revolves around an odd mix of things I find interesting (e.g., Bayesian stats, data privacy, synthetic data)</p>
 </section>
 <section id="course-webpage" class="title-slide slide level1 center">
 <h1>Course webpage</h1>
-<p><a href="thomvolker.github.io">This is a link</a></p>
+<p>All materials are (and will stay) online! <a href="https://thomvolker.github.io/gesyn">https://thomvolker.github.io/gesyn</a></p>
 </section>
 
-<section>
 <section id="lecture-1" class="title-slide slide level1 center">
 <h1>Lecture 1</h1>
 <p>Introduction to synthetic data</p>
+<ul>
+<li><p>Why is it useful?</p></li>
+<li><p>What is synthetic data?</p></li>
+<li><p>Can’t we use other methods?</p></li>
+<li><p>How is synthetic data related to other statistical techniques?</p></li>
+<li><p>How do we balance high-quality synthetic data with minimum disclosure risks?</p></li>
+</ul>
 </section>
-<section id="synthetic-data" class="slide level2">
-<h2>Synthetic data</h2>
+
+<section>
+<section id="example" class="title-slide slide level1 center">
+<h1>Example</h1>
+<p>Dutch Burn Center Beverwijk</p>
+</section>
+<section id="other-use-cases-of-synthetic-data" class="slide level2">
+<h2>Other use-cases of synthetic data</h2>
+<ul>
+<li><p>Open science workflows</p></li>
+<li><p>Temporary surrogate while waiting for real data</p></li>
+<li><p>Educational purposes</p></li>
+<li><p>Model building pipelines</p></li>
+</ul>
+</section>
+<section id="what-is-synthetic-data" class="slide level2">
+<h2>What is synthetic data?</h2>
 <p><a href="https://this-person-does-not-exist.com/en">this person does not exist</a></p>
 <p><a href="https://chat.openai.com/">chatgpt</a></p>
 <p><a href="https://labs.openai.com/">DALL-E</a></p>
+</section></section>
+<section id="synthetic-data" class="title-slide slide level1 center">
+<h1>Synthetic data</h1>
+<div class="callout callout-tip callout-titled callout-style-default">
+<div class="callout-body">
+<div class="callout-title">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<p><strong>Definition</strong></p>
+</div>
+<div class="callout-content">
+<p>Synthetic data is data that is generated from a model: <em>fake data, generated data, simulated data, digital twin</em>.</p>
+<p><em>As opposed to real, natural, collected data</em></p>
+</div>
+</div>
+</div>
+</section>
+
+<section>
+<section id="to-create-synthetic-data-you-need-a-generative-model" class="title-slide slide level1 center">
+<h1>To create synthetic data, you need a <strong>generative model</strong></h1>
+
+</section>
+<section id="generative-model" class="slide level2">
+<h2>Generative model</h2>
+<p><span class="math display">\[f(\boldsymbol{X} | \theta)\]</span></p>
+<ul>
+<li><p>A model <span class="math inline">\(f\)</span> for the data <span class="math inline">\(\boldsymbol{X}\)</span>;</p></li>
+<li><p>With parameters <span class="math inline">\(\theta\)</span>;</p></li>
+<li><p>That are estimated/fitted/learned from real data.</p></li>
+</ul>
+<div class="callout callout-tip callout-titled callout-style-default">
+<div class="callout-body">
+<div class="callout-title">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<p><strong>Definition</strong></p>
+</div>
+<div class="callout-content">
+<p>Generative models learn the distribution of the data <span class="math inline">\(\boldsymbol{X}\)</span> given parameters <span class="math inline">\(\theta\)</span>.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="example-normal-distribution" class="slide level2">
+<h2>Example: Normal distribution</h2>
+<p>A normal distribution with parameters <span class="math inline">\(\theta = \{\mu, \sigma\}\)</span>.</p>
+<div class="cell">
+<div class="cell-output-display">
+<div class="kable-table">
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;"></th>
+<th style="text-align: right;">n</th>
+<th style="text-align: right;">mean</th>
+<th style="text-align: right;">sd</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">X</td>
+<td style="text-align: right;">200</td>
+<td style="text-align: right;">0.983</td>
+<td style="text-align: right;">1.886</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a>n <span class="ot">&lt;-</span> <span class="dv">200</span></span>
+<span id="cb1-2"><a href="#cb1-2"></a>mu <span class="ot">&lt;-</span> <span class="fl">0.983</span></span>
+<span id="cb1-3"><a href="#cb1-3"></a>sigma <span class="ot">&lt;-</span> <span class="fl">1.886</span></span>
+<span id="cb1-4"><a href="#cb1-4"></a></span>
+<span id="cb1-5"><a href="#cb1-5"></a>X_syn <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(<span class="at">n =</span> n, <span class="at">mean =</span> mu, <span class="at">sd =</span> sigma)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="section" class="slide level2">
+<h2></h2>
+
+<img data-src="lecture1_files/figure-revealjs/plot-normal-1.png" width="960" class="r-stretch quarto-figure-center"></section>
+<section id="example-histogram-with-bins-and-proportion" class="slide level2">
+<h2>Example: Histogram with bins and proportion</h2>
+<p>Histogram with <span class="math inline">\(\theta = \{\text{bins}, \pi\}\)</span></p>
+<div class="cell">
+<div class="cell-output-display">
+<div class="kable-table">
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: right;">1</th>
+<th style="text-align: right;">2</th>
+<th style="text-align: right;">3</th>
+<th style="text-align: right;">4</th>
+<th style="text-align: right;">5</th>
+<th style="text-align: right;">6</th>
+<th style="text-align: right;">7</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">0.08</td>
+<td style="text-align: right;">0.165</td>
+<td style="text-align: right;">0.165</td>
+<td style="text-align: right;">0.22</td>
+<td style="text-align: right;">0.115</td>
+<td style="text-align: right;">0.175</td>
+<td style="text-align: right;">0.08</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<p><br> <br></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a>n <span class="ot">&lt;-</span> <span class="dv">200</span></span>
+<span id="cb2-2"><a href="#cb2-2"></a>bins <span class="ot">&lt;-</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">7</span></span>
+<span id="cb2-3"><a href="#cb2-3"></a>props <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fu">table</span>(X)) <span class="sc">/</span> n</span>
+<span id="cb2-4"><a href="#cb2-4"></a></span>
+<span id="cb2-5"><a href="#cb2-5"></a>X_syn <span class="ot">&lt;-</span> <span class="fu">sample</span>(bins, <span class="at">size =</span> <span class="dv">200</span>, <span class="at">replace =</span> <span class="cn">TRUE</span>, <span class="at">prob =</span> props)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="section-1" class="slide level2">
+<h2></h2>
+
+<img data-src="lecture1_files/figure-revealjs/unnamed-chunk-6-1.png" width="960" class="r-stretch"></section>
+<section id="example-neural-network" class="slide level2">
+<h2>Example: Neural Network</h2>
+<p>Every arrow is linked to a parameter (hundreds/thousands of parameters)</p>
+
+<img data-src="files/neural_net.png" class="r-stretch quarto-figure-center"><p class="caption">Neural Network</p></section>
+<section id="many-methods-for-data-synthesis" class="slide level2">
+<h2>Many methods for data synthesis</h2>
+<p>Some are simple and some are complex.</p>
+<p><br></p>
+<p>Some work better than others.</p>
+<p><br></p>
+<p>All have their pros and cons.</p>
+<p><br></p>
+<p>More about this later.</p>
+</section></section>
+<section>
+<section id="traditional-disclosure-control-methods" class="title-slide slide level1 center">
+<h1>Traditional disclosure control methods</h1>
+
 </section>
 <section id="statistical-disclosure-limitation" class="slide level2">
 <h2>Statistical disclosure limitation</h2>
@@ -442,7 +679,7 @@ Thom Benjamin Volker<br>Utrecht University, Statistics Netherlands
         progress: true,
 
         // Display the page number of the current slide
-        slideNumber: false,
+        slideNumber: 'c/t',
 
         // 'all', 'print', or 'speaker'
         showSlideNumber: 'all',
@@ -601,6 +838,44 @@ Thom Benjamin Volker<br>Utrecht University, Statistics Netherlands
         ]
       });
     </script>
+    
+    <script>
+      // htmlwidgets need to know to resize themselves when slides are shown/hidden.
+      // Fire the "slideenter" event (handled by htmlwidgets.js) when the current
+      // slide changes (different for each slide format).
+      (function () {
+        // dispatch for htmlwidgets
+        function fireSlideEnter() {
+          const event = window.document.createEvent("Event");
+          event.initEvent("slideenter", true, true);
+          window.document.dispatchEvent(event);
+        }
+
+        function fireSlideChanged(previousSlide, currentSlide) {
+          fireSlideEnter();
+
+          // dispatch for shiny
+          if (window.jQuery) {
+            if (previousSlide) {
+              window.jQuery(previousSlide).trigger("hidden");
+            }
+            if (currentSlide) {
+              window.jQuery(currentSlide).trigger("shown");
+            }
+          }
+        }
+
+        // hookup for slidy
+        if (window.w3c_slidy) {
+          window.w3c_slidy.add_observer(function (slide_num) {
+            // slide_num starts at position 1
+            fireSlideChanged(null, w3c_slidy.slides[slide_num - 1]);
+          });
+        }
+
+      })();
+    </script>
+
     <script id="quarto-html-after-body" type="application/javascript">
     window.document.addEventListener("DOMContentLoaded", function (event) {
       const toggleBodyColorMode = (bsSheetEl) => {
