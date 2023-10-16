@@ -1,0 +1,190 @@
+---
+title: "gesyn - Practical 1: Introduction to synthetic data"
+author: Thom Benjamin Volker
+format: 
+  html:
+    df-print: kable
+    toc: true
+    toc-depth: 2
+    number-sections: true
+    number-depth: 2
+    code-line-numbers: true
+---
+
+# Introduction
+
+Welcome to the first practical of the course! In this practical, we will work on the foundation of synthetic data generation: generative modelling. Specifically, we will work with the `disease` data, which consists of 232 patients of whom three variables are recorded: 
+
+- `status`: whether the patient has survived (`deceased`, `recovered`);
+- `stay`: how many days the patient has been hospitalized;
+- `age`: the age of the patient.
+
+We will work on creating a synthetic version of this data data set. However, before we start with generating data, we need to get a basic understanding of the data (just throwing a model at a data set is ___always___ a bad idea). 
+
+
+### 1. Install and load the required packages, and fix the state of the random number generator to ensure reproducibility of your results.
+
+```{r}
+#| label: load-packages
+#| message: false
+#| warning: false
+# install.packages("tidyverse")
+# install.packages("psych")
+library(tidyverse)
+library(psych)
+
+set.seed(123)
+```
+
+### 2. Download the disease data and load it into `R`.
+
+```{r}
+#| label: load-data
+disease <- readRDS(url("https://thomvolker.github.io/gesyn/data/disease.RDS"))
+```
+
+
+# Data exploration
+
+### 3. Inspect the first few rows of the data using `head()`.
+
+```{r}
+#| label: head-data
+head(disease)
+```
+
+### 4. Get descriptive statistics for this data set. How many people have recovered? And what is the average age in the sample?
+
+_Hint: You might want to use `summary()` or `describe()` from the `psych()` package._
+
+```{r}
+summary(disease)
+describe(disease)
+```
+
+### 5. Visualize the distributions of the variables `status`, `stay` and `age`. What do you think of their distributions?
+
+```{r}
+ggplot(disease, aes(x = status)) +
+  geom_histogram(stat = "count", fill = "lightblue") +
+  theme_minimal()
+
+ggplot(disease, aes(x = stay)) +
+  geom_density(fill = "lightblue") +
+  theme_minimal()
+
+ggplot(disease, aes(x = age)) +
+  geom_density(fill = "lightblue") +
+  theme_minimal()
+```
+
+# Generative models
+
+We will now start with generating synthetic data. 
+For the moment, we will focus on univariate modelling strategies, and forget for the moment that the relationships between variables are also important. 
+We will focus on multivariate modelling at a later moment. 
+
+### 6. Think about an appropriate model to synthesize the variable `status`. Generate 232 new samples from this distribution.
+
+```{r}
+# There are multiple ways to do this, that will all lead to the same result
+# 
+# 1. Sample from the original distribution
+
+syn_status1 <- sample(disease$status, size = nrow(disease), replace = TRUE)
+
+# 2. Draw a new sample from a Bernoulli distribution
+syn_status2 <- rbinom(
+  n = nrow(disease), 
+  size = 1, 
+  prob = mean(as.numeric(disease$status) - 1)
+) |>
+  factor(labels = c("deceased", "recovered"))
+```
+
+
+### 7. Compare the distributions of the original `status` variable with your synthetic `status` variable. Are they comparable?
+
+
+```{r}
+summary(disease$status)  
+summary(syn_status2)
+```
+
+The counts are slightly different, but the difference is relatively small. It seems a realistic synthetic version of the original variable.
+
+### 8. Do you think it is appropriate to generate a synthetic `age` variable from a normal distribution? Why or why not?
+
+```{r}
+ggplot(disease, aes(x = age)) +
+  geom_density(fill = "lightblue") +
+  stat_function(fun = dnorm, 
+                args = list(mean = mean(disease$age), 
+                            sd = sd(disease$age))) +
+  theme_minimal()
+
+# A normal distribution comes rather close to the original distribution of the
+# variable age, so in terms of distributional similarity: yes, a normal
+# distribution is appropriate. However, a normal distribution is real-valued,
+# whether age is recorded as integer numbers only. Still, we can solve for this
+# by rounding the generated age values.
+```
+
+### 9. Generate 232 synthetic `age` values from a normal distribution, and round the sampled values.
+
+_Hint:_ You can use the function `rnorm()`, and borrow the mean and standard deviation from the original variable.
+
+```{r}
+syn_age <- rnorm(
+  n = nrow(disease),
+  mean = mean(disease$age),
+  sd = sd(disease$age)
+) |>
+  round()
+```
+
+### 10. Compare the distributions of the original `age` variable with your synthetic `age` variable. Are they comparable?
+
+```{r}
+ggplot(disease, aes(x = age)) +
+  geom_density(fill = "lightblue", alpha = 0.5) +
+  geom_density(aes(x = syn_age), fill = "darkblue", alpha = 0.5) +
+  theme_minimal()
+```
+
+The distributions are not identical, but indeed very similar, which is what we want. 
+
+### 11. Compare the distribution of `stay` with a normal distribution, an exponentiated normal distribution (i.e., a log-normal distribution) and a Poisson distribution. Which distribution is most appropriate?
+
+```{r}
+stay_syn_norm <- rnorm(
+  n = nrow(disease),
+  mean = mean(disease$stay),
+  sd = sd(disease$stay)
+)
+stay_syn_lnorm <- exp(
+  rnorm(
+    n = nrow(disease),
+    mean = mean(log(disease$stay + 0.1)),
+    sd = sd(log(disease$stay + 0.1))
+  )
+)
+stay_syn_pois <- rpois(
+  n = nrow(disease),
+  lambda = mean(disease$stay)
+)
+
+ggplot(disease, aes(x = stay)) +
+  geom_density(aes(col = "Observed")) +
+  geom_density(aes(col = "Normal", x = stay_syn_norm)) +
+  geom_density(aes(col = "Log-normal", x = stay_syn_lnorm)) +
+  geom_density(aes(col = "Poisson", x = stay_syn_pois)) +
+  theme_minimal()
+```
+
+
+
+
+
+
+
