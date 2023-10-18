@@ -30,8 +30,10 @@ We will work on creating a synthetic version of this data data set. However, bef
 #| warning: false
 # install.packages("tidyverse")
 # install.packages("psych")
+# install.packages("mvtnorm")
 library(tidyverse)
 library(psych)
+library(mvtnorm)
 
 set.seed(123)
 ```
@@ -84,17 +86,12 @@ We will now start with generating synthetic data.
 For the moment, we will focus on univariate modelling strategies, and forget for the moment that the relationships between variables are also important. 
 We will focus on multivariate modelling at a later moment. 
 
-### 6. Think about an appropriate model to synthesize the variable `status`. Generate 232 new samples from this distribution.
+### 6. Generate 232 new samples from a binomial distribution.
+
+_Hint: Use `rbinom()` with `size = 1`, and `prob` set to the proportion of individuals who recovered._
 
 ```{r}
-# There are multiple ways to do this, that will all lead to the same result
-# 
-# 1. Sample from the original distribution
-
-syn_status1 <- sample(disease$status, size = nrow(disease), replace = TRUE)
-
-# 2. Draw a new sample from a Bernoulli distribution
-syn_status2 <- rbinom(
+syn_status <- rbinom(
   n = nrow(disease), 
   size = 1, 
   prob = mean(as.numeric(disease$status) - 1)
@@ -108,7 +105,7 @@ syn_status2 <- rbinom(
 
 ```{r}
 summary(disease$status)  
-summary(syn_status2)
+summary(syn_status)
 ```
 
 The counts are slightly different, but the difference is relatively small. It seems a realistic synthetic version of the original variable.
@@ -154,37 +151,121 @@ ggplot(disease, aes(x = age)) +
 
 The distributions are not identical, but indeed very similar, which is what we want. 
 
-### 11. Compare the distribution of `stay` with a normal distribution, an exponentiated normal distribution (i.e., a log-normal distribution) and a Poisson distribution. Which distribution is most appropriate?
+### 11. Compare the distribution of the variable `stay` with a normal distribution, a lognormal distribution (i.e., the exponent of a normally distributed variable) and a Poisson distribution using the figure below. Which distribution is most appropriate?
+
+__OPTIONAL:__ If you have plenty of time left, program this comparison yourself. You can use `ggplot()` in combination with `stat_function`, using the functions `dnorm`, `dlnorm` and `dpois`. Pay close attention to the input arguments of these functions.
+
 
 ```{r}
-stay_syn_norm <- rnorm(
-  n = nrow(disease),
-  mean = mean(disease$stay),
-  sd = sd(disease$stay)
-)
-stay_syn_lnorm <- exp(
-  rnorm(
-    n = nrow(disease),
-    mean = mean(log(disease$stay + 0.1)),
-    sd = sd(log(disease$stay + 0.1))
-  )
-)
-stay_syn_pois <- rpois(
-  n = nrow(disease),
-  lambda = mean(disease$stay)
-)
-
 ggplot(disease, aes(x = stay)) +
   geom_density(aes(col = "Observed")) +
-  geom_density(aes(col = "Normal", x = stay_syn_norm)) +
-  geom_density(aes(col = "Log-normal", x = stay_syn_lnorm)) +
-  geom_density(aes(col = "Poisson", x = stay_syn_pois)) +
+  stat_function(aes(col = "Normal"),
+                fun = ~dnorm(.x, 
+                             mean = mean(disease$stay), 
+                             sd = sd(disease$stay))) +
+  stat_function(aes(col = "Log-normal"),
+                fun = ~dlnorm(.x,
+                              meanlog = mean(log(disease$stay)),
+                              sdlog = sd(log(disease$stay)))) +
+  stat_function(aes(col = "Poisson"),
+                n = 71,
+                fun = ~dpois(.x, lambda = mean(disease$stay))) +
+  xlim(-15, 55) +
+  scale_color_brewer(palette = "Dark2", type = "div") +
   theme_minimal()
 ```
 
+### 12. Generate a synthetic version of the variable `stay` by exponentiating all `n = 232` values from  a normal distribution. Again round the drawn values.
+
+_Hint: Because we exponentiate the values, we need to provide the mean and standard deviation on the log scale._
+
+```{r}
+syn_stay <- rnorm(
+  n = 232,
+  mean = mean(log(disease$stay)),
+  sd = sd(log(disease$stay))
+) |> 
+  exp() |>
+  round()
 
 
+```
 
+
+### 13. Compare the distributions of the original `stay` variable with your synthetic `stay` variable. Are they comparable?
+
+```{r}
+ggplot(disease, aes(x = stay)) +
+  geom_density(fill = "lightblue", alpha = 0.5) +
+  geom_density(aes(x = syn_stay), fill = "darkblue", alpha = 0.5) +
+  theme_minimal()
+```
+
+### 14. Separate the data into two groups based on the variable `status`. 
+
+```{r}
+deceased <- filter(disease, status == "deceased")
+recovered <- filter(disease, status == "recovered")
+```
+
+### 15. For each of these groups, estimate the means and covariance matrix of the two variables, `age` and `stay`. Again use `log(stay)`.
+
+```{r}
+means_deceased <- c("age" = mean(deceased$age), 
+                    "stay" = mean(log(deceased$stay)))
+means_recovered <- c("age" = mean(recovered$age),
+                     "stay" = mean(log(recovered$stay)))
+
+var_deceased <- var(data.frame(age = deceased$age,
+                               stay = log(deceased$stay)))
+var_recovered <- var(data.frame(age = recovered$age,
+                                stay = log(recovered$stay)))
+```
+
+### 16. Use your previously created `status` variable, and for each of the two groups, draw synthetic values for `age` and `stay`. 
+
+Create a synthetic data set for the two groups separately. Draw these synthetic sets from a bivariate normal distribution, with the means and (co-)variances specified according to the just estimated values.
+
+_Hint: You can use `rmvnorm` from the `mvtnorm`-package._
+
+```{r}
+syn_deceased <- rmvnorm(
+  n = sum(syn_status == "deceased"),
+  mean = means_deceased,
+  sigma = var_deceased
+)
+syn_recovered <- rmvnorm(
+  n = sum(syn_status == "recovered"),
+  mean = means_recovered,
+  sigma = var_recovered
+)
+
+syn <- bind_rows(
+  "deceased" = data.frame(syn_deceased),
+  "recovered" = data.frame(syn_recovered),
+  .id = "status"
+) |>
+  mutate(
+    status = factor(status),
+    age = round(age),
+    stay = exp(stay) |> round()
+  )
+```
+
+### 17. OPTIONAL: Compare the univariate distributions of the variables in your final synthetic data set with the distributions in the observed data. Also compare the correlations between the variables. How good is the synthetic data?
+
+```{r}
+ggplot() +
+  geom_density(aes(x = disease$age, col = "Observed")) +
+  geom_density(aes(x = syn$age, col = "Synthetic"))
+
+ggplot() +
+  geom_density(aes(x = disease$stay, col = "Observed")) +
+  geom_density(aes(x = syn$stay, col = "Synthetic"))
+
+cor(sapply(disease, as.numeric))
+cor(sapply(syn, as.numeric))
+```
 
 
 
