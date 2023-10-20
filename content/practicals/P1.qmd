@@ -9,11 +9,12 @@ format:
     number-sections: true
     number-depth: 2
     code-line-numbers: true
+    callout-icon: false
 ---
 
 # Introduction
 
-Welcome to the first practical of the course! In this practical, we will work on the foundation of synthetic data generation: generative modelling. Specifically, we will work with the `disease` data, which consists of 232 patients of whom three variables are recorded: 
+Welcome to the first practical of the course! In this practical, we will work on the foundation of synthetic data generation: generative modelling. Specifically, we will work with the `disease` data, which consists of 232 observations whom are measured on three variables: 
 
 - `status`: whether the patient has survived (`deceased`, `recovered`);
 - `stay`: how many days the patient has been hospitalized;
@@ -21,8 +22,9 @@ Welcome to the first practical of the course! In this practical, we will work on
 
 We will work on creating a synthetic version of this data data set. However, before we start with generating data, we need to get a basic understanding of the data (just throwing a model at a data set is ___always___ a bad idea). 
 
+---
 
-### 1. Install and load the required packages, and fix the state of the random number generator to ensure reproducibility of your results.
+#### 1. Install and load the required packages, and fix the state of the random number generator to ensure reproducibility of your results.
 
 ```{r}
 #| label: load-packages
@@ -38,125 +40,248 @@ library(mvtnorm)
 set.seed(123)
 ```
 
-### 2. Download the disease data and load it into `R`.
+---
+
+#### 2. Download the disease data and load it into `R`.
 
 ```{r}
 #| label: load-data
 disease <- readRDS(url("https://thomvolker.github.io/gesyn/data/disease.RDS"))
 ```
 
+---
 
 # Data exploration
 
-### 3. Inspect the first few rows of the data using `head()`.
+Now we have the data and package loaded, we can start on exploring the data. Below, there is some advice on how to approach this, but if you have different ideas about how to explore the data, do not hesitate to check other aspects that you find important!
+
+---
+
+#### 3. Inspect the first few rows of the data using `head()`.
+
+::: {.callout-note collapse="true" title="Show me the answer!"}
 
 ```{r}
 #| label: head-data
 head(disease)
 ```
 
-### 4. Get descriptive statistics for this data set. How many people have recovered? And what is the average age in the sample?
+The status variable is a factor, age is recorded in years (and the observations are above sixty (at least these six)), stay is recorded in days (and most people do not seem to stay very long, but there are some exceptions).
+
+:::
+
+---
+
+#### 4. Get descriptive statistics for this data set. How many people have recovered? And what is the average age in the sample?
 
 _Hint: You might want to use `summary()` or `describe()` from the `psych()` package._
 
+::: {.callout-note collapse="true" title="Show me the answer!"}
+
 ```{r}
+#| label: summary-data
 summary(disease)
 describe(disease)
 ```
 
-### 5. Visualize the distributions of the variables `status`, `stay` and `age`. What do you think of their distributions?
+Unfortunately, `r sum(disease$status == 'deceased')` observations deceased during their stay. All people are between `r min(disease$age)` and `r max(disease$age)` years old, with a mean of `r round(mean(disease$age))`, and people stayed between `r min(disease$stay)` and `r max(disease$stay)` days in the hospital.
+
+:::
+
+---
+
+
+#### 5. Visualize the distributions of the variables `status`, `stay` and `age`. What do you think of their distributions?
+
+::: {.callout-note collapse="true" title="Show me the answer!"}
+
+You can approach this in two ways, either with base R plots or with ggplot. 
+Both approaches are fine, but ggplot often allows a bit more flexibility, and is easier to restyle.
+
+`base R`
 
 ```{r}
+#| label: visualize-univariate-base
+#| eval: false
+
+plot(disease$status)
+plot(density(disease$age))
+plot(density(disease$stay))
+```
+
+`ggplot`
+
+```{r}
+#| label: visualize-univariate-ggplot
+#| eval: false
+
+ggplot(disease, aes(x = status)) +
+  geom_histogram(stat = "count")
+
+ggplot(disease, aes(x = age)) +
+  geom_density()
+
+ggplot(disease, aes(x = stay)) +
+  geom_density()
+```
+
+```{r}
+#| label: visualize-univariate-show
+#| echo: false
+#| warning: false
+
 ggplot(disease, aes(x = status)) +
   geom_histogram(stat = "count", fill = "lightblue") +
+  theme_minimal()
+
+ggplot(disease, aes(x = age)) +
+  geom_density(fill = "lightblue") +
   theme_minimal()
 
 ggplot(disease, aes(x = stay)) +
   geom_density(fill = "lightblue") +
   theme_minimal()
-
-ggplot(disease, aes(x = age)) +
-  geom_density(fill = "lightblue") +
-  theme_minimal()
 ```
+
+The variable `age` seems about normally distributed, whereas the variable `stay` is quite skewed, with many small values but also some large values. This is something we need to deal with later on. As we already knew, there are much more people who recovered. 
+
+:::
+
+
+---
 
 # Generative models
 
-We will now start with generating synthetic data. 
-For the moment, we will focus on univariate modelling strategies, and forget for the moment that the relationships between variables are also important. 
-We will focus on multivariate modelling at a later moment. 
+Now we have some basic understand of what the data looks like, we will start generating synthetic data. 
+For the moment, we will focus on modelling the univariate distributions, and ignore for the moment that the relationships between variables are also important. 
+We will deal with multivariate modelling at a later moment. 
 
-### 6. Generate 232 new samples from a binomial distribution.
+---
+
+## Univariate generative models
+
+We start with generating a synthetic version of the variable `status`. Since the variable is dichotomous, generating synthetic values is typically easy. We can simply assign probabilities to every potential outcome, and draw `n = r nrow(disease)` synthetic values according to these probabilities (for example from a [Categorical distribution](https://en.wikipedia.org/wiki/Categorical_distribution)). In the current situation this is particularly convenient, because we only have a dichotomous variable, and we can draw `r nrow(disease)` synthetic values from a [Binomial distribution](https://en.wikipedia.org/wiki/Binomial_distribution) with the number of trials set to $1$ (i.e., a [Bernoulli distribution](https://en.wikipedia.org/wiki/Bernoulli_distribution)) and the success probability equal to the proportion of recovered individuals in our sample.
+
+---
+
+#### 6. Generate `r nrow(disease)` synthetic values for the variable `status` from a Binomial distribution. Make sure that the resulting variable is a factor with two categories: `deceased` and `recovered`.
 
 _Hint: Use `rbinom()` with `size = 1`, and `prob` set to the proportion of individuals who recovered._
 
+::: {.callout-note collapse="true" title="Show me the answer!"}
+
 ```{r}
+#| label: gen-status
+
+n    <- nrow(disease)
+prob <- sum(as.numeric(disease$status == "recovered")) / n
+
 syn_status <- rbinom(
-  n = nrow(disease), 
+  n = n,
   size = 1, 
-  prob = mean(as.numeric(disease$status) - 1)
+  prob = prob
 ) |>
   factor(labels = c("deceased", "recovered"))
 ```
 
+:::
 
-### 7. Compare the distributions of the original `status` variable with your synthetic `status` variable. Are they comparable?
+---
 
+#### 7. Compare the distributions of the original `status` variable with your synthetic `status` variable. Are they comparable?
+
+::: {.callout-note collapse="true" title="Show me the answer!"}
 
 ```{r}
+#| label: compare-status
 summary(disease$status)  
 summary(syn_status)
 ```
 
+
 The counts are slightly different, but the difference is relatively small. It seems a realistic synthetic version of the original variable.
 
-### 8. Do you think it is appropriate to generate a synthetic `age` variable from a normal distribution? Why or why not?
+:::
+
+
+---
+
+We now turn to generating synthetic versions of the continuous variables. Typically, it is good practice to think of probability distributions that match the distribution of the variable of interest, or evaluate whether it is possible to transform the variable of interest such that it can be approximated by a distribution that is easy to work with. It is also possible to work with complex non-parametric generative models that adapt to the distribution of the variable, but typically it is harder to control the privacy leakage with such models. So for now, we focus on simple, parametric distributions (like a [Normal distribution](https://en.wikipedia.org/wiki/Normal_distribution) and a [Log-normal distribution](https://en.wikipedia.org/wiki/Log-normal_distribution)).
+
+---
+
+#### 8. Do you think it is appropriate to generate a synthetic `age` variable from a normal distribution? Why or why not?
+
+::: {.callout-note collapse="true" title="Show me the answer!"}
 
 ```{r}
+#| label: age-normal-plot
+
 ggplot(disease, aes(x = age)) +
   geom_density(fill = "lightblue") +
   stat_function(fun = dnorm, 
-                args = list(mean = mean(disease$age), 
-                            sd = sd(disease$age))) +
+                args = list(mean = mean(disease$age), sd = sd(disease$age))) +
   theme_minimal()
-
-# A normal distribution comes rather close to the original distribution of the
-# variable age, so in terms of distributional similarity: yes, a normal
-# distribution is appropriate. However, a normal distribution is real-valued,
-# whether age is recorded as integer numbers only. Still, we can solve for this
-# by rounding the generated age values.
 ```
 
-### 9. Generate 232 synthetic `age` values from a normal distribution, and round the sampled values.
 
-_Hint:_ You can use the function `rnorm()`, and borrow the mean and standard deviation from the original variable.
+A normal distribution comes rather close to the original distribution of the variable age, so in terms of distributional similarity: yes, a normal distribution is appropriate. However, a normal distribution is real-valued, whether age is recorded as integer numbers only. Still, we can solve for this by rounding the generated age values.
+
+:::
+
+---
+
+#### 9. Generate 232 synthetic `age` values from a normal distribution, and round the sampled values.
+
+_Hint: You can use the function `rnorm()`, and borrow the mean and standard deviation from the original variable._
+
+::: {.callout-note collapse="true" title="Show me the answer!"}
 
 ```{r}
+#| label: gen-age
 syn_age <- rnorm(
-  n = nrow(disease),
+  n = n,
   mean = mean(disease$age),
   sd = sd(disease$age)
 ) |>
   round()
 ```
 
-### 10. Compare the distributions of the original `age` variable with your synthetic `age` variable. Are they comparable?
+:::
+
+---
+
+A crucial step after generating synthetic data is to verify whether it is of sufficient quality (i.e., utility), by comparing it to the real data. On a univariate level, this is quite often done by making visualizations of both the observed and synthetic data, and evaluating whether the distributions are similar. In a later practical, we will use more sophisticated techniques, but for now, comparing the distributions suffices. 
+
+---
+
+#### 10. Compare the distributions of the original `age` variable with your synthetic `age` variable. Are they comparable?
+
+::: {.callout-note collapse="true" title="Show me the answer!"}
 
 ```{r}
+#| label: eval-age-syn
+
 ggplot(disease, aes(x = age)) +
   geom_density(fill = "lightblue", alpha = 0.5) +
   geom_density(aes(x = syn_age), fill = "darkblue", alpha = 0.5) +
   theme_minimal()
 ```
 
-The distributions are not identical, but indeed very similar, which is what we want. 
+The distributions are not identical, but indeed very similar, which is what we want.
 
-### 11. Compare the distribution of the variable `stay` with a normal distribution, a lognormal distribution (i.e., the exponent of a normally distributed variable) and a Poisson distribution using the figure below. Which distribution is most appropriate?
+:::
 
-__OPTIONAL:__ If you have plenty of time left, program this comparison yourself. You can use `ggplot()` in combination with `stat_function`, using the functions `dnorm`, `dlnorm` and `dpois`. Pay close attention to the input arguments of these functions.
+---
+
+#### 11. Compare the distribution of the variable `stay` with a normal distribution, a lognormal distribution (i.e., the exponent of a normally distributed variable) and a Poisson distribution using the figure below. Which distribution is most appropriate?
+
+__OPTIONAL:__ If you have plenty of time left, program this comparison yourself. You can use `ggplot()` in combination with `stat_function`, using the functions `dnorm`, `dlnorm` and `dpois`. Pay close attention to the input arguments of these functions. Note that the Poisson distribution is an integer distribution, and thus has zero density at any non-integer value. You can accommodate this by setting the `n` parameter in `stat_function()` to the range of the `x` values in your figure. 
 
 
 ```{r}
+#| label: plot-stay
+#| echo: false
 ggplot(disease, aes(x = stay)) +
   geom_density(aes(col = "Observed")) +
   stat_function(aes(col = "Normal"),
@@ -175,13 +300,43 @@ ggplot(disease, aes(x = stay)) +
   theme_minimal()
 ```
 
-### 12. Generate a synthetic version of the variable `stay` by exponentiating all `n = 232` values from  a normal distribution. Again round the drawn values.
-
-_Hint: Because we exponentiate the values, we need to provide the mean and standard deviation on the log scale._
+::: {.callout-note collapse="true" title="Show me the code!"}
 
 ```{r}
+#| label: plot-stay-code
+#| eval: false
+ggplot(disease, aes(x = stay)) +
+  geom_density(aes(col = "Observed")) +
+  stat_function(aes(col = "Normal"),
+                fun = ~dnorm(.x, 
+                             mean = mean(disease$stay), 
+                             sd = sd(disease$stay))) +
+  stat_function(aes(col = "Log-normal"),
+                fun = ~dlnorm(.x,
+                              meanlog = mean(log(disease$stay)),
+                              sdlog = sd(log(disease$stay)))) +
+  stat_function(aes(col = "Poisson"),
+                n = 71,
+                fun = ~dpois(.x, lambda = mean(disease$stay))) +
+  xlim(-15, 55) +
+  scale_color_brewer(palette = "Dark2", type = "div") +
+  theme_minimal()
+```
+
+:::
+
+---
+
+#### 12. Generate a synthetic version of the variable `stay` by drawing `r n` values from a normal distribution, and subsequently take their exponent. Again round the drawn values.
+
+_Hint: Because we exponentiate the values after drawing them, we need to provide the mean and standard deviation on the log scale._
+
+::: {.callout-note collapse="true" title="Show me the answer!"}
+
+```{r}
+#| label: gen-syn-stay
 syn_stay <- rnorm(
-  n = 232,
+  n = n,
   mean = mean(log(disease$stay)),
   sd = sd(log(disease$stay))
 ) |> 
@@ -191,8 +346,13 @@ syn_stay <- rnorm(
 
 ```
 
+:::
 
-### 13. Compare the distributions of the original `stay` variable with your synthetic `stay` variable. Are they comparable?
+---
+
+#### 13. Compare the distributions of the original `stay` variable with your synthetic `stay` variable. Are they comparable?
+
+::: {.callout-note collapse="true" title="Show me the answer!"}
 
 ```{r}
 ggplot(disease, aes(x = stay)) +
@@ -201,58 +361,94 @@ ggplot(disease, aes(x = stay)) +
   theme_minimal()
 ```
 
-### 14. Separate the data into two groups based on the variable `status`. 
+:::
+
+---
+
+## Multivariate generative models
+
+In all previous examples, we have ignored the relationships between the variables. 
+Typically, we can model the multivariate distribution of the data through a series of conditional distributions.
+In the next lecture, we will formalize these ideas, for now, it is sufficient to get the conceptual idea.
+When modelling the multivariate distribution with a series of conditional models, we essentially break down the problem of modelling the multivariate distribution to estimating a series of prediction models.
+To make sure that the synthetic values have sufficient variance, we add random noise to the predicted values from these models, such that the synthetic values are equal to the predicted values + some random error component. 
+The simplest way to generate the synthetic values, is to build up the complexity of the prediction models such that every synthetic variable is generated on the basis of the previously synthesized variables. 
+In our case, with only three variables, this would boil down to the following three models.
+
+1. Generate `status` from a univariate distribution that is not conditional on any of the other variables (i.e., an intercept-only prediction model). Note that we have already done this, when we drew new synthetic `status` values from the binomial distribution.
+
+2. Generate `age` from a prediction model with `status` as a predictor variable. 
+
+3. Generate `stay` from a prediction model with `status` and `age` as predictors.
+
+Note that we estimate these prediction models on the observed data, but use the synthetic versions of the independent variables to generate the synthetic values.
+
+---
+
+#### 14. Create a `data.frame` called `syn` consisting of the variable `status`, which is our previously created synthetic status variable.
+
+::: {.callout-note collapse="true" title="Show me the answer!"}
 
 ```{r}
-deceased <- filter(disease, status == "deceased")
-recovered <- filter(disease, status == "recovered")
+#| label: create-syn-status-df
+syn <- data.frame(status = syn_status)
 ```
 
-### 15. For each of these groups, estimate the means and covariance matrix of the two variables, `age` and `stay`. Again use `log(stay)`.
+:::
+
+---
+
+#### 15. Fit a linear regression model with `age` as dependent variable and `status` as predictor variable using the observed data.
+
+::: {.callout-note collapse="true" title="Show me the answer!"}
 
 ```{r}
-means_deceased <- c("age" = mean(deceased$age), 
-                    "stay" = mean(log(deceased$stay)))
-means_recovered <- c("age" = mean(recovered$age),
-                     "stay" = mean(log(recovered$stay)))
-
-var_deceased <- var(data.frame(age = deceased$age,
-                               stay = log(deceased$stay)))
-var_recovered <- var(data.frame(age = recovered$age,
-                                stay = log(recovered$stay)))
+#| label: fit-age
+fit_age <- lm(age ~ status, disease)
 ```
 
-### 16. Use your previously created `status` variable, and for each of the two groups, draw synthetic values for `age` and `stay`. 
+:::
 
-Create a synthetic data set for the two groups separately. Draw these synthetic sets from a bivariate normal distribution, with the means and (co-)variances specified according to the just estimated values.
+---
 
-_Hint: You can use `rmvnorm` from the `mvtnorm`-package._
+#### 16. Add a synthetic `age` variable to the `syn` data set by using the fitted regression model to predict age values for the synthetic `status` values. Add noise to these values by drawing `r n` values from a normal distribution with a mean of zero, and a standard deviation that is equal to the residual standard deviation.
+
+::: {.callout-note collapse="true" title="Show me the answer!"}
 
 ```{r}
-syn_deceased <- rmvnorm(
-  n = sum(syn_status == "deceased"),
-  mean = means_deceased,
-  sigma = var_deceased
-)
-syn_recovered <- rmvnorm(
-  n = sum(syn_status == "recovered"),
-  mean = means_recovered,
-  sigma = var_recovered
-)
+#| label: gen-age-mv
 
-syn <- bind_rows(
-  "deceased" = data.frame(syn_deceased),
-  "recovered" = data.frame(syn_recovered),
-  .id = "status"
-) |>
-  mutate(
-    status = factor(status),
-    age = round(age),
-    stay = exp(stay) |> round()
-  )
+syn$age <- predict(fit_age, newdata = syn) + rnorm(n, mean = 0, sd = sd(fit_age$residuals))
 ```
 
-### 17. OPTIONAL: Compare the univariate distributions of the variables in your final synthetic data set with the distributions in the observed data. Also compare the correlations between the variables. How good is the synthetic data?
+:::
+
+---
+
+#### 17. Do the same thing for the variable `stay`, but with `status` and `age` as predictor variables. Make sure to log-transform `stay` before fitting the regression model, and to take the exponent of the synthetic values before adding these to the `syn` data set.
+
+
+::: {.callout-note collapse="true" title="Show me the answer!"}
+
+```{r}
+#| label: fit-and-gen-stay
+fit_stay <- lm(log(stay) ~ status + age, disease)
+syn$stay <- exp(predict(fit_stay, newdata = syn) + rnorm(n, mean = 0, sd = sd(fit_stay$residuals)))
+```
+
+
+:::
+
+---
+
+Congratulations, you have created your first synthetic data set! If you have any time left, you can explore how good your synthetic data is by comparing the distributions of the observed and synthetic data. You can also explore whether the relationships between the variables are now well preserved, for example by fitting a (logistic) regression model using one of the variables as the outcome, and the others as predictors. 
+
+---
+
+
+#### 17. OPTIONAL: Compare the univariate distributions of the variables in your final synthetic data set with the distributions in the observed data. Also compare the correlations between the variables. How good is the synthetic data?
+
+::: {.callout-note collapse="true" title="Show me the answer!"}
 
 ```{r}
 ggplot() +
@@ -267,5 +463,9 @@ cor(sapply(disease, as.numeric))
 cor(sapply(syn, as.numeric))
 ```
 
+:::
 
+---
+
+--- END OF PRACTICAL ---
 

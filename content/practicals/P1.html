@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.3.340">
+<meta name="generator" content="quarto-1.3.433">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -69,6 +69,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="P1_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
 <link href="P1_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
 
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
 
 </head>
 
@@ -82,7 +84,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul class="collapse">
   <li><a href="#introduction" id="toc-introduction" class="nav-link active" data-scroll-target="#introduction"><span class="header-section-number">1</span> Introduction</a></li>
   <li><a href="#data-exploration" id="toc-data-exploration" class="nav-link" data-scroll-target="#data-exploration"><span class="header-section-number">2</span> Data exploration</a></li>
-  <li><a href="#generative-models" id="toc-generative-models" class="nav-link" data-scroll-target="#generative-models"><span class="header-section-number">3</span> Generative models</a></li>
+  <li><a href="#generative-models" id="toc-generative-models" class="nav-link" data-scroll-target="#generative-models"><span class="header-section-number">3</span> Generative models</a>
+  <ul class="collapse">
+  <li><a href="#univariate-generative-models" id="toc-univariate-generative-models" class="nav-link" data-scroll-target="#univariate-generative-models"><span class="header-section-number">3.1</span> Univariate generative models</a></li>
+  <li><a href="#multivariate-generative-models" id="toc-multivariate-generative-models" class="nav-link" data-scroll-target="#multivariate-generative-models"><span class="header-section-number">3.2</span> Multivariate generative models</a></li>
+  </ul></li>
   </ul>
 </nav>
 </div>
@@ -113,15 +119,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <section id="introduction" class="level1" data-number="1">
 <h1 data-number="1"><span class="header-section-number">1</span> Introduction</h1>
-<p>Welcome to the first practical of the course! In this practical, we will work on the foundation of synthetic data generation: generative modelling. Specifically, we will work with the <code>disease</code> data, which consists of 232 patients of whom three variables are recorded:</p>
+<p>Welcome to the first practical of the course! In this practical, we will work on the foundation of synthetic data generation: generative modelling. Specifically, we will work with the <code>disease</code> data, which consists of 232 observations whom are measured on three variables:</p>
 <ul>
 <li><code>status</code>: whether the patient has survived (<code>deceased</code>, <code>recovered</code>);</li>
 <li><code>stay</code>: how many days the patient has been hospitalized;</li>
 <li><code>age</code>: the age of the patient.</li>
 </ul>
 <p>We will work on creating a synthetic version of this data data set. However, before we start with generating data, we need to get a basic understanding of the data (just throwing a model at a data set is <strong><em>always</em></strong> a bad idea).</p>
-<section id="install-and-load-the-required-packages-and-fix-the-state-of-the-random-number-generator-to-ensure-reproducibility-of-your-results." class="level3">
-<h3 class="anchored" data-anchor-id="install-and-load-the-required-packages-and-fix-the-state-of-the-random-number-generator-to-ensure-reproducibility-of-your-results.">1. Install and load the required packages, and fix the state of the random number generator to ensure reproducibility of your results.</h3>
+<hr>
+<section id="install-and-load-the-required-packages-and-fix-the-state-of-the-random-number-generator-to-ensure-reproducibility-of-your-results." class="level4">
+<h4 class="anchored" data-anchor-id="install-and-load-the-required-packages-and-fix-the-state-of-the-random-number-generator-to-ensure-reproducibility-of-your-results.">1. Install and load the required packages, and fix the state of the random number generator to ensure reproducibility of your results.</h4>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a><span class="co"># install.packages("tidyverse")</span></span>
 <span id="cb1-2"><a href="#cb1-2"></a><span class="co"># install.packages("psych")</span></span>
@@ -132,18 +139,34 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-7"><a href="#cb1-7"></a></span>
 <span id="cb1-8"><a href="#cb1-8"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+<hr>
 </section>
-<section id="download-the-disease-data-and-load-it-into-r." class="level3">
-<h3 class="anchored" data-anchor-id="download-the-disease-data-and-load-it-into-r.">2. Download the disease data and load it into <code>R</code>.</h3>
+<section id="download-the-disease-data-and-load-it-into-r." class="level4">
+<h4 class="anchored" data-anchor-id="download-the-disease-data-and-load-it-into-r.">2. Download the disease data and load it into <code>R</code>.</h4>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a>disease <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="fu">url</span>(<span class="st">"https://thomvolker.github.io/gesyn/data/disease.RDS"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+<hr>
 </section>
 </section>
 <section id="data-exploration" class="level1" data-number="2">
 <h1 data-number="2"><span class="header-section-number">2</span> Data exploration</h1>
-<section id="inspect-the-first-few-rows-of-the-data-using-head." class="level3">
-<h3 class="anchored" data-anchor-id="inspect-the-first-few-rows-of-the-data-using-head.">3. Inspect the first few rows of the data using <code>head()</code>.</h3>
+<p>Now we have the data and package loaded, we can start on exploring the data. Below, there is some advice on how to approach this, but if you have different ideas about how to explore the data, do not hesitate to check other aspects that you find important!</p>
+<hr>
+<section id="inspect-the-first-few-rows-of-the-data-using-head." class="level4">
+<h4 class="anchored" data-anchor-id="inspect-the-first-few-rows-of-the-data-using-head.">3. Inspect the first few rows of the data using <code>head()</code>.</h4>
+<div class="callout callout-style-default callout-note no-icon callout-titled" title="Show me the answer!">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Show me the answer!
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-1" class="callout-1-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
 <div class="cell">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1"></a><span class="fu">head</span>(disease)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
@@ -159,22 +182,22 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td style="text-align: left;">recovered</td>
-<td style="text-align: right;">71</td>
+<td style="text-align: right;">72</td>
 <td style="text-align: right;">3</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">recovered</td>
-<td style="text-align: right;">76</td>
+<td style="text-align: right;">77</td>
 <td style="text-align: right;">3</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">recovered</td>
-<td style="text-align: right;">74</td>
+<td style="text-align: right;">76</td>
 <td style="text-align: right;">6</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">deceased</td>
-<td style="text-align: right;">65</td>
+<td style="text-align: right;">76</td>
 <td style="text-align: right;">5</td>
 </tr>
 <tr class="odd">
@@ -184,7 +207,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td style="text-align: left;">deceased</td>
-<td style="text-align: right;">61</td>
+<td style="text-align: right;">83</td>
 <td style="text-align: right;">23</td>
 </tr>
 </tbody>
@@ -192,20 +215,37 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </div>
+<p>The status variable is a factor, age is recorded in years (and the observations are above sixty (at least these six)), stay is recorded in days (and most people do not seem to stay very long, but there are some exceptions).</p>
+</div>
+</div>
+</div>
+<hr>
 </section>
-<section id="get-descriptive-statistics-for-this-data-set.-how-many-people-have-recovered-and-what-is-the-average-age-in-the-sample" class="level3">
-<h3 class="anchored" data-anchor-id="get-descriptive-statistics-for-this-data-set.-how-many-people-have-recovered-and-what-is-the-average-age-in-the-sample">4. Get descriptive statistics for this data set. How many people have recovered? And what is the average age in the sample?</h3>
+<section id="get-descriptive-statistics-for-this-data-set.-how-many-people-have-recovered-and-what-is-the-average-age-in-the-sample" class="level4">
+<h4 class="anchored" data-anchor-id="get-descriptive-statistics-for-this-data-set.-how-many-people-have-recovered-and-what-is-the-average-age-in-the-sample">4. Get descriptive statistics for this data set. How many people have recovered? And what is the average age in the sample?</h4>
 <p><em>Hint: You might want to use <code>summary()</code> or <code>describe()</code> from the <code>psych()</code> package.</em></p>
+<div class="callout callout-style-default callout-note no-icon callout-titled" title="Show me the answer!">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Show me the answer!
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-2" class="callout-2-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
 <div class="cell">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a><span class="fu">summary</span>(disease)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>       status         age             stay       
  deceased : 42   Min.   :52.00   Min.   : 1.000  
- recovered:190   1st Qu.:63.00   1st Qu.: 2.000  
-                 Median :66.00   Median : 4.000  
-                 Mean   :65.92   Mean   : 6.612  
-                 3rd Qu.:70.00   3rd Qu.: 9.000  
-                 Max.   :86.00   Max.   :52.000  </code></pre>
+ recovered:190   1st Qu.:65.00   1st Qu.: 2.000  
+                 Median :69.00   Median : 4.000  
+                 Mean   :69.38   Mean   : 6.612  
+                 3rd Qu.:73.00   3rd Qu.: 9.000  
+                 Max.   :91.00   Max.   :52.000  </code></pre>
 </div>
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1"></a><span class="fu">describe</span>(disease)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
@@ -223,7 +263,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <col style="width: 3%">
 <col style="width: 3%">
 <col style="width: 5%">
-<col style="width: 10%">
+<col style="width: 9%">
 <col style="width: 9%">
 <col style="width: 9%">
 </colgroup>
@@ -258,7 +298,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td style="text-align: right;">1</td>
 <td style="text-align: right;">2</td>
 <td style="text-align: right;">1</td>
-<td style="text-align: right;">-1.6460623</td>
+<td style="text-align: right;">-1.646062</td>
 <td style="text-align: right;">0.7126484</td>
 <td style="text-align: right;">0.0253342</td>
 </tr>
@@ -266,17 +306,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td style="text-align: left;">age</td>
 <td style="text-align: right;">2</td>
 <td style="text-align: right;">232</td>
-<td style="text-align: right;">65.922414</td>
-<td style="text-align: right;">5.6171519</td>
-<td style="text-align: right;">66</td>
-<td style="text-align: right;">65.983871</td>
+<td style="text-align: right;">69.375000</td>
+<td style="text-align: right;">6.4795299</td>
+<td style="text-align: right;">69</td>
+<td style="text-align: right;">69.166667</td>
 <td style="text-align: right;">5.9304</td>
 <td style="text-align: right;">52</td>
-<td style="text-align: right;">86</td>
-<td style="text-align: right;">34</td>
-<td style="text-align: right;">0.0243344</td>
-<td style="text-align: right;">0.1571293</td>
-<td style="text-align: right;">0.3687841</td>
+<td style="text-align: right;">91</td>
+<td style="text-align: right;">39</td>
+<td style="text-align: right;">0.382934</td>
+<td style="text-align: right;">0.7504447</td>
+<td style="text-align: right;">0.4254020</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">stay</td>
@@ -290,7 +330,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td style="text-align: right;">1</td>
 <td style="text-align: right;">52</td>
 <td style="text-align: right;">51</td>
-<td style="text-align: right;">2.7291176</td>
+<td style="text-align: right;">2.729118</td>
 <td style="text-align: right;">9.6124730</td>
 <td style="text-align: right;">0.4951075</td>
 </tr>
@@ -299,239 +339,474 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </div>
+<p>Unfortunately, 42 observations deceased during their stay. All people are between 52 and 91 years old, with a mean of 69, and people stayed between 1 and 52 days in the hospital.</p>
+</div>
+</div>
+</div>
+<hr>
 </section>
-<section id="visualize-the-distributions-of-the-variables-status-stay-and-age.-what-do-you-think-of-their-distributions" class="level3">
-<h3 class="anchored" data-anchor-id="visualize-the-distributions-of-the-variables-status-stay-and-age.-what-do-you-think-of-their-distributions">5. Visualize the distributions of the variables <code>status</code>, <code>stay</code> and <code>age</code>. What do you think of their distributions?</h3>
+<section id="visualize-the-distributions-of-the-variables-status-stay-and-age.-what-do-you-think-of-their-distributions" class="level4">
+<h4 class="anchored" data-anchor-id="visualize-the-distributions-of-the-variables-status-stay-and-age.-what-do-you-think-of-their-distributions">5. Visualize the distributions of the variables <code>status</code>, <code>stay</code> and <code>age</code>. What do you think of their distributions?</h4>
+<div class="callout callout-style-default callout-note no-icon callout-titled" title="Show me the answer!">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Show me the answer!
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-3" class="callout-3-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>You can approach this in two ways, either with base R plots or with ggplot. Both approaches are fine, but ggplot often allows a bit more flexibility, and is easier to restyle.</p>
+<p><code>base R</code></p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1"></a><span class="fu">ggplot</span>(disease, <span class="fu">aes</span>(<span class="at">x =</span> status)) <span class="sc">+</span></span>
-<span id="cb7-2"><a href="#cb7-2"></a>  <span class="fu">geom_histogram</span>(<span class="at">stat =</span> <span class="st">"count"</span>, <span class="at">fill =</span> <span class="st">"lightblue"</span>) <span class="sc">+</span></span>
-<span id="cb7-3"><a href="#cb7-3"></a>  <span class="fu">theme_minimal</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>Warning in geom_histogram(stat = "count", fill = "lightblue"): Ignoring unknown
-parameters: `binwidth`, `bins`, and `pad`</code></pre>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1"></a><span class="fu">plot</span>(disease<span class="sc">$</span>status)</span>
+<span id="cb7-2"><a href="#cb7-2"></a><span class="fu">plot</span>(<span class="fu">density</span>(disease<span class="sc">$</span>age))</span>
+<span id="cb7-3"><a href="#cb7-3"></a><span class="fu">plot</span>(<span class="fu">density</span>(disease<span class="sc">$</span>stay))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><code>ggplot</code></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1"></a><span class="fu">ggplot</span>(disease, <span class="fu">aes</span>(<span class="at">x =</span> status)) <span class="sc">+</span></span>
+<span id="cb8-2"><a href="#cb8-2"></a>  <span class="fu">geom_histogram</span>(<span class="at">stat =</span> <span class="st">"count"</span>)</span>
+<span id="cb8-3"><a href="#cb8-3"></a></span>
+<span id="cb8-4"><a href="#cb8-4"></a><span class="fu">ggplot</span>(disease, <span class="fu">aes</span>(<span class="at">x =</span> age)) <span class="sc">+</span></span>
+<span id="cb8-5"><a href="#cb8-5"></a>  <span class="fu">geom_density</span>()</span>
+<span id="cb8-6"><a href="#cb8-6"></a></span>
+<span id="cb8-7"><a href="#cb8-7"></a><span class="fu">ggplot</span>(disease, <span class="fu">aes</span>(<span class="at">x =</span> stay)) <span class="sc">+</span></span>
+<span id="cb8-8"><a href="#cb8-8"></a>  <span class="fu">geom_density</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="cell-output-display">
+<p><img src="P1_files/figure-html/visualize-univariate-show-1.png" class="img-fluid" width="672"></p>
 </div>
 <div class="cell-output-display">
-<p><img src="P1_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid" width="672"></p>
+<p><img src="P1_files/figure-html/visualize-univariate-show-2.png" class="img-fluid" width="672"></p>
 </div>
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1"></a><span class="fu">ggplot</span>(disease, <span class="fu">aes</span>(<span class="at">x =</span> stay)) <span class="sc">+</span></span>
-<span id="cb9-2"><a href="#cb9-2"></a>  <span class="fu">geom_density</span>(<span class="at">fill =</span> <span class="st">"lightblue"</span>) <span class="sc">+</span></span>
-<span id="cb9-3"><a href="#cb9-3"></a>  <span class="fu">theme_minimal</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
-<p><img src="P1_files/figure-html/unnamed-chunk-5-2.png" class="img-fluid" width="672"></p>
-</div>
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1"></a><span class="fu">ggplot</span>(disease, <span class="fu">aes</span>(<span class="at">x =</span> age)) <span class="sc">+</span></span>
-<span id="cb10-2"><a href="#cb10-2"></a>  <span class="fu">geom_density</span>(<span class="at">fill =</span> <span class="st">"lightblue"</span>) <span class="sc">+</span></span>
-<span id="cb10-3"><a href="#cb10-3"></a>  <span class="fu">theme_minimal</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
-<p><img src="P1_files/figure-html/unnamed-chunk-5-3.png" class="img-fluid" width="672"></p>
+<p><img src="P1_files/figure-html/visualize-univariate-show-3.png" class="img-fluid" width="672"></p>
 </div>
 </div>
+<p>The variable <code>age</code> seems about normally distributed, whereas the variable <code>stay</code> is quite skewed, with many small values but also some large values. This is something we need to deal with later on. As we already knew, there are much more people who recovered.</p>
+</div>
+</div>
+</div>
+<hr>
 </section>
 </section>
 <section id="generative-models" class="level1" data-number="3">
 <h1 data-number="3"><span class="header-section-number">3</span> Generative models</h1>
-<p>We will now start with generating synthetic data. For the moment, we will focus on univariate modelling strategies, and forget for the moment that the relationships between variables are also important. We will focus on multivariate modelling at a later moment.</p>
-<section id="generate-232-new-samples-from-a-binomial-distribution." class="level3">
-<h3 class="anchored" data-anchor-id="generate-232-new-samples-from-a-binomial-distribution.">6. Generate 232 new samples from a binomial distribution.</h3>
+<p>Now we have some basic understand of what the data looks like, we will start generating synthetic data. For the moment, we will focus on modelling the univariate distributions, and ignore for the moment that the relationships between variables are also important. We will deal with multivariate modelling at a later moment.</p>
+<hr>
+<section id="univariate-generative-models" class="level2" data-number="3.1">
+<h2 data-number="3.1" class="anchored" data-anchor-id="univariate-generative-models"><span class="header-section-number">3.1</span> Univariate generative models</h2>
+<p>We start with generating a synthetic version of the variable <code>status</code>. Since the variable is dichotomous, generating synthetic values is typically easy. We can simply assign probabilities to every potential outcome, and draw <code>n = r nrow(disease)</code> synthetic values according to these probabilities (for example from a <a href="https://en.wikipedia.org/wiki/Categorical_distribution">Categorical distribution</a>). In the current situation this is particularly convenient, because we only have a dichotomous variable, and we can draw 232 synthetic values from a <a href="https://en.wikipedia.org/wiki/Binomial_distribution">Binomial distribution</a> with the number of trials set to <span class="math inline">\(1\)</span> (i.e., a <a href="https://en.wikipedia.org/wiki/Bernoulli_distribution">Bernoulli distribution</a>) and the success probability equal to the proportion of recovered individuals in our sample.</p>
+<hr>
+<section id="generate-232-synthetic-values-for-the-variable-status-from-a-binomial-distribution.-make-sure-that-the-resulting-variable-is-a-factor-with-two-categories-deceased-and-recovered." class="level4">
+<h4 class="anchored" data-anchor-id="generate-232-synthetic-values-for-the-variable-status-from-a-binomial-distribution.-make-sure-that-the-resulting-variable-is-a-factor-with-two-categories-deceased-and-recovered.">6. Generate 232 synthetic values for the variable <code>status</code> from a Binomial distribution. Make sure that the resulting variable is a factor with two categories: <code>deceased</code> and <code>recovered</code>.</h4>
 <p><em>Hint: Use <code>rbinom()</code> with <code>size = 1</code>, and <code>prob</code> set to the proportion of individuals who recovered.</em></p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1"></a>syn_status <span class="ot">&lt;-</span> <span class="fu">rbinom</span>(</span>
-<span id="cb11-2"><a href="#cb11-2"></a>  <span class="at">n =</span> <span class="fu">nrow</span>(disease), </span>
-<span id="cb11-3"><a href="#cb11-3"></a>  <span class="at">size =</span> <span class="dv">1</span>, </span>
-<span id="cb11-4"><a href="#cb11-4"></a>  <span class="at">prob =</span> <span class="fu">mean</span>(<span class="fu">as.numeric</span>(disease<span class="sc">$</span>status) <span class="sc">-</span> <span class="dv">1</span>)</span>
-<span id="cb11-5"><a href="#cb11-5"></a>) <span class="sc">|&gt;</span></span>
-<span id="cb11-6"><a href="#cb11-6"></a>  <span class="fu">factor</span>(<span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"deceased"</span>, <span class="st">"recovered"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="callout callout-style-default callout-note no-icon callout-titled" title="Show me the answer!">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-4-contents" aria-controls="callout-4" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
 </div>
-</section>
-<section id="compare-the-distributions-of-the-original-status-variable-with-your-synthetic-status-variable.-are-they-comparable" class="level3">
-<h3 class="anchored" data-anchor-id="compare-the-distributions-of-the-original-status-variable-with-your-synthetic-status-variable.-are-they-comparable">7. Compare the distributions of the original <code>status</code> variable with your synthetic <code>status</code> variable. Are they comparable?</h3>
+<div class="callout-title-container flex-fill">
+Show me the answer!
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-4" class="callout-4-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
 <div class="cell">
-<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1"></a><span class="fu">summary</span>(disease<span class="sc">$</span>status)  </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1"></a>n    <span class="ot">&lt;-</span> <span class="fu">nrow</span>(disease)</span>
+<span id="cb9-2"><a href="#cb9-2"></a>prob <span class="ot">&lt;-</span> <span class="fu">sum</span>(<span class="fu">as.numeric</span>(disease<span class="sc">$</span>status <span class="sc">==</span> <span class="st">"recovered"</span>)) <span class="sc">/</span> n</span>
+<span id="cb9-3"><a href="#cb9-3"></a></span>
+<span id="cb9-4"><a href="#cb9-4"></a>syn_status <span class="ot">&lt;-</span> <span class="fu">rbinom</span>(</span>
+<span id="cb9-5"><a href="#cb9-5"></a>  <span class="at">n =</span> n,</span>
+<span id="cb9-6"><a href="#cb9-6"></a>  <span class="at">size =</span> <span class="dv">1</span>, </span>
+<span id="cb9-7"><a href="#cb9-7"></a>  <span class="at">prob =</span> prob</span>
+<span id="cb9-8"><a href="#cb9-8"></a>) <span class="sc">|&gt;</span></span>
+<span id="cb9-9"><a href="#cb9-9"></a>  <span class="fu">factor</span>(<span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"deceased"</span>, <span class="st">"recovered"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</section>
+<section id="compare-the-distributions-of-the-original-status-variable-with-your-synthetic-status-variable.-are-they-comparable" class="level4">
+<h4 class="anchored" data-anchor-id="compare-the-distributions-of-the-original-status-variable-with-your-synthetic-status-variable.-are-they-comparable">7. Compare the distributions of the original <code>status</code> variable with your synthetic <code>status</code> variable. Are they comparable?</h4>
+<div class="callout callout-style-default callout-note no-icon callout-titled" title="Show me the answer!">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-5-contents" aria-controls="callout-5" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Show me the answer!
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-5" class="callout-5-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1"></a><span class="fu">summary</span>(disease<span class="sc">$</span>status)  </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code> deceased recovered 
        42       190 </code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1"></a><span class="fu">summary</span>(syn_status)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1"></a><span class="fu">summary</span>(syn_status)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code> deceased recovered 
        40       192 </code></pre>
 </div>
 </div>
 <p>The counts are slightly different, but the difference is relatively small. It seems a realistic synthetic version of the original variable.</p>
+</div>
+</div>
+</div>
+<hr>
+<p>We now turn to generating synthetic versions of the continuous variables. Typically, it is good practice to think of probability distributions that match the distribution of the variable of interest, or evaluate whether it is possible to transform the variable of interest such that it can be approximated by a distribution that is easy to work with. It is also possible to work with complex non-parametric generative models that adapt to the distribution of the variable, but typically it is harder to control the privacy leakage with such models. So for now, we focus on simple, parametric distributions (like a <a href="https://en.wikipedia.org/wiki/Normal_distribution">Normal distribution</a> and a <a href="https://en.wikipedia.org/wiki/Log-normal_distribution">Log-normal distribution</a>).</p>
+<hr>
 </section>
-<section id="do-you-think-it-is-appropriate-to-generate-a-synthetic-age-variable-from-a-normal-distribution-why-or-why-not" class="level3">
-<h3 class="anchored" data-anchor-id="do-you-think-it-is-appropriate-to-generate-a-synthetic-age-variable-from-a-normal-distribution-why-or-why-not">8. Do you think it is appropriate to generate a synthetic <code>age</code> variable from a normal distribution? Why or why not?</h3>
+<section id="do-you-think-it-is-appropriate-to-generate-a-synthetic-age-variable-from-a-normal-distribution-why-or-why-not" class="level4">
+<h4 class="anchored" data-anchor-id="do-you-think-it-is-appropriate-to-generate-a-synthetic-age-variable-from-a-normal-distribution-why-or-why-not">8. Do you think it is appropriate to generate a synthetic <code>age</code> variable from a normal distribution? Why or why not?</h4>
+<div class="callout callout-style-default callout-note no-icon callout-titled" title="Show me the answer!">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-6-contents" aria-controls="callout-6" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Show me the answer!
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-6" class="callout-6-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1"></a><span class="fu">ggplot</span>(disease, <span class="fu">aes</span>(<span class="at">x =</span> age)) <span class="sc">+</span></span>
+<span id="cb14-2"><a href="#cb14-2"></a>  <span class="fu">geom_density</span>(<span class="at">fill =</span> <span class="st">"lightblue"</span>) <span class="sc">+</span></span>
+<span id="cb14-3"><a href="#cb14-3"></a>  <span class="fu">stat_function</span>(<span class="at">fun =</span> dnorm, </span>
+<span id="cb14-4"><a href="#cb14-4"></a>                <span class="at">args =</span> <span class="fu">list</span>(<span class="at">mean =</span> <span class="fu">mean</span>(disease<span class="sc">$</span>age), <span class="at">sd =</span> <span class="fu">sd</span>(disease<span class="sc">$</span>age))) <span class="sc">+</span></span>
+<span id="cb14-5"><a href="#cb14-5"></a>  <span class="fu">theme_minimal</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="P1_files/figure-html/age-normal-plot-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>A normal distribution comes rather close to the original distribution of the variable age, so in terms of distributional similarity: yes, a normal distribution is appropriate. However, a normal distribution is real-valued, whether age is recorded as integer numbers only. Still, we can solve for this by rounding the generated age values.</p>
+</div>
+</div>
+</div>
+<hr>
+</section>
+<section id="generate-232-synthetic-age-values-from-a-normal-distribution-and-round-the-sampled-values." class="level4">
+<h4 class="anchored" data-anchor-id="generate-232-synthetic-age-values-from-a-normal-distribution-and-round-the-sampled-values.">9. Generate 232 synthetic <code>age</code> values from a normal distribution, and round the sampled values.</h4>
+<p><em>Hint: You can use the function <code>rnorm()</code>, and borrow the mean and standard deviation from the original variable.</em></p>
+<div class="callout callout-style-default callout-note no-icon callout-titled" title="Show me the answer!">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-7-contents" aria-controls="callout-7" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Show me the answer!
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-7" class="callout-7-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1"></a>syn_age <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(</span>
+<span id="cb15-2"><a href="#cb15-2"></a>  <span class="at">n =</span> n,</span>
+<span id="cb15-3"><a href="#cb15-3"></a>  <span class="at">mean =</span> <span class="fu">mean</span>(disease<span class="sc">$</span>age),</span>
+<span id="cb15-4"><a href="#cb15-4"></a>  <span class="at">sd =</span> <span class="fu">sd</span>(disease<span class="sc">$</span>age)</span>
+<span id="cb15-5"><a href="#cb15-5"></a>) <span class="sc">|&gt;</span></span>
+<span id="cb15-6"><a href="#cb15-6"></a>  <span class="fu">round</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
+<hr>
+<p>A crucial step after generating synthetic data is to verify whether it is of sufficient quality (i.e., utility), by comparing it to the real data. On a univariate level, this is quite often done by making visualizations of both the observed and synthetic data, and evaluating whether the distributions are similar. In a later practical, we will use more sophisticated techniques, but for now, comparing the distributions suffices.</p>
+<hr>
+</section>
+<section id="compare-the-distributions-of-the-original-age-variable-with-your-synthetic-age-variable.-are-they-comparable" class="level4">
+<h4 class="anchored" data-anchor-id="compare-the-distributions-of-the-original-age-variable-with-your-synthetic-age-variable.-are-they-comparable">10. Compare the distributions of the original <code>age</code> variable with your synthetic <code>age</code> variable. Are they comparable?</h4>
+<div class="callout callout-style-default callout-note no-icon callout-titled" title="Show me the answer!">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-8-contents" aria-controls="callout-8" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Show me the answer!
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-8" class="callout-8-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
 <div class="cell">
 <div class="sourceCode cell-code" id="cb16"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1"></a><span class="fu">ggplot</span>(disease, <span class="fu">aes</span>(<span class="at">x =</span> age)) <span class="sc">+</span></span>
-<span id="cb16-2"><a href="#cb16-2"></a>  <span class="fu">geom_density</span>(<span class="at">fill =</span> <span class="st">"lightblue"</span>) <span class="sc">+</span></span>
-<span id="cb16-3"><a href="#cb16-3"></a>  <span class="fu">stat_function</span>(<span class="at">fun =</span> dnorm, </span>
-<span id="cb16-4"><a href="#cb16-4"></a>                <span class="at">args =</span> <span class="fu">list</span>(<span class="at">mean =</span> <span class="fu">mean</span>(disease<span class="sc">$</span>age), </span>
-<span id="cb16-5"><a href="#cb16-5"></a>                            <span class="at">sd =</span> <span class="fu">sd</span>(disease<span class="sc">$</span>age))) <span class="sc">+</span></span>
-<span id="cb16-6"><a href="#cb16-6"></a>  <span class="fu">theme_minimal</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb16-2"><a href="#cb16-2"></a>  <span class="fu">geom_density</span>(<span class="at">fill =</span> <span class="st">"lightblue"</span>, <span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
+<span id="cb16-3"><a href="#cb16-3"></a>  <span class="fu">geom_density</span>(<span class="fu">aes</span>(<span class="at">x =</span> syn_age), <span class="at">fill =</span> <span class="st">"darkblue"</span>, <span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
+<span id="cb16-4"><a href="#cb16-4"></a>  <span class="fu">theme_minimal</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
-<p><img src="P1_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid" width="672"></p>
-</div>
-<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1"></a><span class="co"># A normal distribution comes rather close to the original distribution of the</span></span>
-<span id="cb17-2"><a href="#cb17-2"></a><span class="co"># variable age, so in terms of distributional similarity: yes, a normal</span></span>
-<span id="cb17-3"><a href="#cb17-3"></a><span class="co"># distribution is appropriate. However, a normal distribution is real-valued,</span></span>
-<span id="cb17-4"><a href="#cb17-4"></a><span class="co"># whether age is recorded as integer numbers only. Still, we can solve for this</span></span>
-<span id="cb17-5"><a href="#cb17-5"></a><span class="co"># by rounding the generated age values.</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-</section>
-<section id="generate-232-synthetic-age-values-from-a-normal-distribution-and-round-the-sampled-values." class="level3">
-<h3 class="anchored" data-anchor-id="generate-232-synthetic-age-values-from-a-normal-distribution-and-round-the-sampled-values.">9. Generate 232 synthetic <code>age</code> values from a normal distribution, and round the sampled values.</h3>
-<p><em>Hint:</em> You can use the function <code>rnorm()</code>, and borrow the mean and standard deviation from the original variable.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1"></a>syn_age <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(</span>
-<span id="cb18-2"><a href="#cb18-2"></a>  <span class="at">n =</span> <span class="fu">nrow</span>(disease),</span>
-<span id="cb18-3"><a href="#cb18-3"></a>  <span class="at">mean =</span> <span class="fu">mean</span>(disease<span class="sc">$</span>age),</span>
-<span id="cb18-4"><a href="#cb18-4"></a>  <span class="at">sd =</span> <span class="fu">sd</span>(disease<span class="sc">$</span>age)</span>
-<span id="cb18-5"><a href="#cb18-5"></a>) <span class="sc">|&gt;</span></span>
-<span id="cb18-6"><a href="#cb18-6"></a>  <span class="fu">round</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-</section>
-<section id="compare-the-distributions-of-the-original-age-variable-with-your-synthetic-age-variable.-are-they-comparable" class="level3">
-<h3 class="anchored" data-anchor-id="compare-the-distributions-of-the-original-age-variable-with-your-synthetic-age-variable.-are-they-comparable">10. Compare the distributions of the original <code>age</code> variable with your synthetic <code>age</code> variable. Are they comparable?</h3>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1"></a><span class="fu">ggplot</span>(disease, <span class="fu">aes</span>(<span class="at">x =</span> age)) <span class="sc">+</span></span>
-<span id="cb19-2"><a href="#cb19-2"></a>  <span class="fu">geom_density</span>(<span class="at">fill =</span> <span class="st">"lightblue"</span>, <span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
-<span id="cb19-3"><a href="#cb19-3"></a>  <span class="fu">geom_density</span>(<span class="fu">aes</span>(<span class="at">x =</span> syn_age), <span class="at">fill =</span> <span class="st">"darkblue"</span>, <span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
-<span id="cb19-4"><a href="#cb19-4"></a>  <span class="fu">theme_minimal</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
-<p><img src="P1_files/figure-html/unnamed-chunk-10-1.png" class="img-fluid" width="672"></p>
+<p><img src="P1_files/figure-html/eval-age-syn-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
 <p>The distributions are not identical, but indeed very similar, which is what we want.</p>
+</div>
+</div>
+</div>
+<hr>
 </section>
-<section id="compare-the-distribution-of-the-variable-stay-with-a-normal-distribution-a-lognormal-distribution-i.e.-the-exponent-of-a-normally-distributed-variable-and-a-poisson-distribution-using-the-figure-below.-which-distribution-is-most-appropriate" class="level3">
-<h3 class="anchored" data-anchor-id="compare-the-distribution-of-the-variable-stay-with-a-normal-distribution-a-lognormal-distribution-i.e.-the-exponent-of-a-normally-distributed-variable-and-a-poisson-distribution-using-the-figure-below.-which-distribution-is-most-appropriate">11. Compare the distribution of the variable <code>stay</code> with a normal distribution, a lognormal distribution (i.e., the exponent of a normally distributed variable) and a Poisson distribution using the figure below. Which distribution is most appropriate?</h3>
-<p><strong>OPTIONAL:</strong> If you have plenty of time left, program this comparison yourself. You can use <code>ggplot()</code> in combination with <code>stat_function</code>, using the functions <code>dnorm</code>, <code>dlnorm</code> and <code>dpois</code>. Pay close attention to the input arguments of these functions.</p>
+<section id="compare-the-distribution-of-the-variable-stay-with-a-normal-distribution-a-lognormal-distribution-i.e.-the-exponent-of-a-normally-distributed-variable-and-a-poisson-distribution-using-the-figure-below.-which-distribution-is-most-appropriate" class="level4">
+<h4 class="anchored" data-anchor-id="compare-the-distribution-of-the-variable-stay-with-a-normal-distribution-a-lognormal-distribution-i.e.-the-exponent-of-a-normally-distributed-variable-and-a-poisson-distribution-using-the-figure-below.-which-distribution-is-most-appropriate">11. Compare the distribution of the variable <code>stay</code> with a normal distribution, a lognormal distribution (i.e., the exponent of a normally distributed variable) and a Poisson distribution using the figure below. Which distribution is most appropriate?</h4>
+<p><strong>OPTIONAL:</strong> If you have plenty of time left, program this comparison yourself. You can use <code>ggplot()</code> in combination with <code>stat_function</code>, using the functions <code>dnorm</code>, <code>dlnorm</code> and <code>dpois</code>. Pay close attention to the input arguments of these functions. Note that the Poisson distribution is an integer distribution, and thus has zero density at any non-integer value. You can accommodate this by setting the <code>n</code> parameter in <code>stat_function()</code> to the range of the <code>x</code> values in your figure.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1"></a><span class="fu">ggplot</span>(disease, <span class="fu">aes</span>(<span class="at">x =</span> stay)) <span class="sc">+</span></span>
-<span id="cb20-2"><a href="#cb20-2"></a>  <span class="fu">geom_density</span>(<span class="fu">aes</span>(<span class="at">col =</span> <span class="st">"Observed"</span>)) <span class="sc">+</span></span>
-<span id="cb20-3"><a href="#cb20-3"></a>  <span class="fu">stat_function</span>(<span class="fu">aes</span>(<span class="at">col =</span> <span class="st">"Normal"</span>),</span>
-<span id="cb20-4"><a href="#cb20-4"></a>                <span class="at">fun =</span> <span class="sc">~</span><span class="fu">dnorm</span>(.x, </span>
-<span id="cb20-5"><a href="#cb20-5"></a>                             <span class="at">mean =</span> <span class="fu">mean</span>(disease<span class="sc">$</span>stay), </span>
-<span id="cb20-6"><a href="#cb20-6"></a>                             <span class="at">sd =</span> <span class="fu">sd</span>(disease<span class="sc">$</span>stay))) <span class="sc">+</span></span>
-<span id="cb20-7"><a href="#cb20-7"></a>  <span class="fu">stat_function</span>(<span class="fu">aes</span>(<span class="at">col =</span> <span class="st">"Log-normal"</span>),</span>
-<span id="cb20-8"><a href="#cb20-8"></a>                <span class="at">fun =</span> <span class="sc">~</span><span class="fu">dlnorm</span>(.x,</span>
-<span id="cb20-9"><a href="#cb20-9"></a>                              <span class="at">meanlog =</span> <span class="fu">mean</span>(<span class="fu">log</span>(disease<span class="sc">$</span>stay)),</span>
-<span id="cb20-10"><a href="#cb20-10"></a>                              <span class="at">sdlog =</span> <span class="fu">sd</span>(<span class="fu">log</span>(disease<span class="sc">$</span>stay)))) <span class="sc">+</span></span>
-<span id="cb20-11"><a href="#cb20-11"></a>  <span class="fu">stat_function</span>(<span class="fu">aes</span>(<span class="at">col =</span> <span class="st">"Poisson"</span>),</span>
-<span id="cb20-12"><a href="#cb20-12"></a>                <span class="at">n =</span> <span class="dv">71</span>,</span>
-<span id="cb20-13"><a href="#cb20-13"></a>                <span class="at">fun =</span> <span class="sc">~</span><span class="fu">dpois</span>(.x, <span class="at">lambda =</span> <span class="fu">mean</span>(disease<span class="sc">$</span>stay))) <span class="sc">+</span></span>
-<span id="cb20-14"><a href="#cb20-14"></a>  <span class="fu">xlim</span>(<span class="sc">-</span><span class="dv">15</span>, <span class="dv">55</span>) <span class="sc">+</span></span>
-<span id="cb20-15"><a href="#cb20-15"></a>  <span class="fu">scale_color_brewer</span>(<span class="at">palette =</span> <span class="st">"Dark2"</span>, <span class="at">type =</span> <span class="st">"div"</span>) <span class="sc">+</span></span>
-<span id="cb20-16"><a href="#cb20-16"></a>  <span class="fu">theme_minimal</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
-<p><img src="P1_files/figure-html/unnamed-chunk-11-1.png" class="img-fluid" width="672"></p>
+<p><img src="P1_files/figure-html/plot-stay-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
-</section>
-<section id="generate-a-synthetic-version-of-the-variable-stay-by-exponentiating-all-n-232-values-from-a-normal-distribution.-again-round-the-drawn-values." class="level3">
-<h3 class="anchored" data-anchor-id="generate-a-synthetic-version-of-the-variable-stay-by-exponentiating-all-n-232-values-from-a-normal-distribution.-again-round-the-drawn-values.">12. Generate a synthetic version of the variable <code>stay</code> by exponentiating all <code>n = 232</code> values from a normal distribution. Again round the drawn values.</h3>
-<p><em>Hint: Because we exponentiate the values, we need to provide the mean and standard deviation on the log scale.</em></p>
+<div class="callout callout-style-default callout-note no-icon callout-titled" title="Show me the code!">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-9-contents" aria-controls="callout-9" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Show me the code!
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-9" class="callout-9-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
 <div class="cell">
-<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1"></a>syn_stay <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(</span>
-<span id="cb21-2"><a href="#cb21-2"></a>  <span class="at">n =</span> <span class="dv">232</span>,</span>
-<span id="cb21-3"><a href="#cb21-3"></a>  <span class="at">mean =</span> <span class="fu">mean</span>(<span class="fu">log</span>(disease<span class="sc">$</span>stay)),</span>
-<span id="cb21-4"><a href="#cb21-4"></a>  <span class="at">sd =</span> <span class="fu">sd</span>(<span class="fu">log</span>(disease<span class="sc">$</span>stay))</span>
-<span id="cb21-5"><a href="#cb21-5"></a>) <span class="sc">|&gt;</span> </span>
-<span id="cb21-6"><a href="#cb21-6"></a>  <span class="fu">exp</span>() <span class="sc">|&gt;</span></span>
-<span id="cb21-7"><a href="#cb21-7"></a>  <span class="fu">round</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1"></a><span class="fu">ggplot</span>(disease, <span class="fu">aes</span>(<span class="at">x =</span> stay)) <span class="sc">+</span></span>
+<span id="cb17-2"><a href="#cb17-2"></a>  <span class="fu">geom_density</span>(<span class="fu">aes</span>(<span class="at">col =</span> <span class="st">"Observed"</span>)) <span class="sc">+</span></span>
+<span id="cb17-3"><a href="#cb17-3"></a>  <span class="fu">stat_function</span>(<span class="fu">aes</span>(<span class="at">col =</span> <span class="st">"Normal"</span>),</span>
+<span id="cb17-4"><a href="#cb17-4"></a>                <span class="at">fun =</span> <span class="sc">~</span><span class="fu">dnorm</span>(.x, </span>
+<span id="cb17-5"><a href="#cb17-5"></a>                             <span class="at">mean =</span> <span class="fu">mean</span>(disease<span class="sc">$</span>stay), </span>
+<span id="cb17-6"><a href="#cb17-6"></a>                             <span class="at">sd =</span> <span class="fu">sd</span>(disease<span class="sc">$</span>stay))) <span class="sc">+</span></span>
+<span id="cb17-7"><a href="#cb17-7"></a>  <span class="fu">stat_function</span>(<span class="fu">aes</span>(<span class="at">col =</span> <span class="st">"Log-normal"</span>),</span>
+<span id="cb17-8"><a href="#cb17-8"></a>                <span class="at">fun =</span> <span class="sc">~</span><span class="fu">dlnorm</span>(.x,</span>
+<span id="cb17-9"><a href="#cb17-9"></a>                              <span class="at">meanlog =</span> <span class="fu">mean</span>(<span class="fu">log</span>(disease<span class="sc">$</span>stay)),</span>
+<span id="cb17-10"><a href="#cb17-10"></a>                              <span class="at">sdlog =</span> <span class="fu">sd</span>(<span class="fu">log</span>(disease<span class="sc">$</span>stay)))) <span class="sc">+</span></span>
+<span id="cb17-11"><a href="#cb17-11"></a>  <span class="fu">stat_function</span>(<span class="fu">aes</span>(<span class="at">col =</span> <span class="st">"Poisson"</span>),</span>
+<span id="cb17-12"><a href="#cb17-12"></a>                <span class="at">n =</span> <span class="dv">71</span>,</span>
+<span id="cb17-13"><a href="#cb17-13"></a>                <span class="at">fun =</span> <span class="sc">~</span><span class="fu">dpois</span>(.x, <span class="at">lambda =</span> <span class="fu">mean</span>(disease<span class="sc">$</span>stay))) <span class="sc">+</span></span>
+<span id="cb17-14"><a href="#cb17-14"></a>  <span class="fu">xlim</span>(<span class="sc">-</span><span class="dv">15</span>, <span class="dv">55</span>) <span class="sc">+</span></span>
+<span id="cb17-15"><a href="#cb17-15"></a>  <span class="fu">scale_color_brewer</span>(<span class="at">palette =</span> <span class="st">"Dark2"</span>, <span class="at">type =</span> <span class="st">"div"</span>) <span class="sc">+</span></span>
+<span id="cb17-16"><a href="#cb17-16"></a>  <span class="fu">theme_minimal</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+</div>
+</div>
+</div>
+<hr>
 </section>
-<section id="compare-the-distributions-of-the-original-stay-variable-with-your-synthetic-stay-variable.-are-they-comparable" class="level3">
-<h3 class="anchored" data-anchor-id="compare-the-distributions-of-the-original-stay-variable-with-your-synthetic-stay-variable.-are-they-comparable">13. Compare the distributions of the original <code>stay</code> variable with your synthetic <code>stay</code> variable. Are they comparable?</h3>
+<section id="generate-a-synthetic-version-of-the-variable-stay-by-drawing-232-values-from-a-normal-distribution-and-subsequently-take-their-exponent.-again-round-the-drawn-values." class="level4">
+<h4 class="anchored" data-anchor-id="generate-a-synthetic-version-of-the-variable-stay-by-drawing-232-values-from-a-normal-distribution-and-subsequently-take-their-exponent.-again-round-the-drawn-values.">12. Generate a synthetic version of the variable <code>stay</code> by drawing 232 values from a normal distribution, and subsequently take their exponent. Again round the drawn values.</h4>
+<p><em>Hint: Because we exponentiate the values after drawing them, we need to provide the mean and standard deviation on the log scale.</em></p>
+<div class="callout callout-style-default callout-note no-icon callout-titled" title="Show me the answer!">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-10-contents" aria-controls="callout-10" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Show me the answer!
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-10" class="callout-10-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
 <div class="cell">
-<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1"></a><span class="fu">ggplot</span>(disease, <span class="fu">aes</span>(<span class="at">x =</span> stay)) <span class="sc">+</span></span>
-<span id="cb22-2"><a href="#cb22-2"></a>  <span class="fu">geom_density</span>(<span class="at">fill =</span> <span class="st">"lightblue"</span>, <span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
-<span id="cb22-3"><a href="#cb22-3"></a>  <span class="fu">geom_density</span>(<span class="fu">aes</span>(<span class="at">x =</span> syn_stay), <span class="at">fill =</span> <span class="st">"darkblue"</span>, <span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
-<span id="cb22-4"><a href="#cb22-4"></a>  <span class="fu">theme_minimal</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1"></a>syn_stay <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(</span>
+<span id="cb18-2"><a href="#cb18-2"></a>  <span class="at">n =</span> n,</span>
+<span id="cb18-3"><a href="#cb18-3"></a>  <span class="at">mean =</span> <span class="fu">mean</span>(<span class="fu">log</span>(disease<span class="sc">$</span>stay)),</span>
+<span id="cb18-4"><a href="#cb18-4"></a>  <span class="at">sd =</span> <span class="fu">sd</span>(<span class="fu">log</span>(disease<span class="sc">$</span>stay))</span>
+<span id="cb18-5"><a href="#cb18-5"></a>) <span class="sc">|&gt;</span> </span>
+<span id="cb18-6"><a href="#cb18-6"></a>  <span class="fu">exp</span>() <span class="sc">|&gt;</span></span>
+<span id="cb18-7"><a href="#cb18-7"></a>  <span class="fu">round</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</section>
+<section id="compare-the-distributions-of-the-original-stay-variable-with-your-synthetic-stay-variable.-are-they-comparable" class="level4">
+<h4 class="anchored" data-anchor-id="compare-the-distributions-of-the-original-stay-variable-with-your-synthetic-stay-variable.-are-they-comparable">13. Compare the distributions of the original <code>stay</code> variable with your synthetic <code>stay</code> variable. Are they comparable?</h4>
+<div class="callout callout-style-default callout-note no-icon callout-titled" title="Show me the answer!">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-11-contents" aria-controls="callout-11" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Show me the answer!
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-11" class="callout-11-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1"></a><span class="fu">ggplot</span>(disease, <span class="fu">aes</span>(<span class="at">x =</span> stay)) <span class="sc">+</span></span>
+<span id="cb19-2"><a href="#cb19-2"></a>  <span class="fu">geom_density</span>(<span class="at">fill =</span> <span class="st">"lightblue"</span>, <span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
+<span id="cb19-3"><a href="#cb19-3"></a>  <span class="fu">geom_density</span>(<span class="fu">aes</span>(<span class="at">x =</span> syn_stay), <span class="at">fill =</span> <span class="st">"darkblue"</span>, <span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
+<span id="cb19-4"><a href="#cb19-4"></a>  <span class="fu">theme_minimal</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
-<p><img src="P1_files/figure-html/unnamed-chunk-13-1.png" class="img-fluid" width="672"></p>
+<p><img src="P1_files/figure-html/unnamed-chunk-16-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
+</div>
+</div>
+</div>
+<hr>
 </section>
-<section id="separate-the-data-into-two-groups-based-on-the-variable-status." class="level3">
-<h3 class="anchored" data-anchor-id="separate-the-data-into-two-groups-based-on-the-variable-status.">14. Separate the data into two groups based on the variable <code>status</code>.</h3>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1"></a>deceased <span class="ot">&lt;-</span> <span class="fu">filter</span>(disease, status <span class="sc">==</span> <span class="st">"deceased"</span>)</span>
-<span id="cb23-2"><a href="#cb23-2"></a>recovered <span class="ot">&lt;-</span> <span class="fu">filter</span>(disease, status <span class="sc">==</span> <span class="st">"recovered"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
 </section>
-<section id="for-each-of-these-groups-estimate-the-means-and-covariance-matrix-of-the-two-variables-age-and-stay.-again-use-logstay." class="level3">
-<h3 class="anchored" data-anchor-id="for-each-of-these-groups-estimate-the-means-and-covariance-matrix-of-the-two-variables-age-and-stay.-again-use-logstay.">15. For each of these groups, estimate the means and covariance matrix of the two variables, <code>age</code> and <code>stay</code>. Again use <code>log(stay)</code>.</h3>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1"></a>means_deceased <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"age"</span> <span class="ot">=</span> <span class="fu">mean</span>(deceased<span class="sc">$</span>age), </span>
-<span id="cb24-2"><a href="#cb24-2"></a>                    <span class="st">"stay"</span> <span class="ot">=</span> <span class="fu">mean</span>(<span class="fu">log</span>(deceased<span class="sc">$</span>stay)))</span>
-<span id="cb24-3"><a href="#cb24-3"></a>means_recovered <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"age"</span> <span class="ot">=</span> <span class="fu">mean</span>(recovered<span class="sc">$</span>age),</span>
-<span id="cb24-4"><a href="#cb24-4"></a>                     <span class="st">"stay"</span> <span class="ot">=</span> <span class="fu">mean</span>(<span class="fu">log</span>(recovered<span class="sc">$</span>stay)))</span>
-<span id="cb24-5"><a href="#cb24-5"></a></span>
-<span id="cb24-6"><a href="#cb24-6"></a>var_deceased <span class="ot">&lt;-</span> <span class="fu">var</span>(<span class="fu">data.frame</span>(<span class="at">age =</span> deceased<span class="sc">$</span>age,</span>
-<span id="cb24-7"><a href="#cb24-7"></a>                               <span class="at">stay =</span> <span class="fu">log</span>(deceased<span class="sc">$</span>stay)))</span>
-<span id="cb24-8"><a href="#cb24-8"></a>var_recovered <span class="ot">&lt;-</span> <span class="fu">var</span>(<span class="fu">data.frame</span>(<span class="at">age =</span> recovered<span class="sc">$</span>age,</span>
-<span id="cb24-9"><a href="#cb24-9"></a>                                <span class="at">stay =</span> <span class="fu">log</span>(recovered<span class="sc">$</span>stay)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<section id="multivariate-generative-models" class="level2" data-number="3.2">
+<h2 data-number="3.2" class="anchored" data-anchor-id="multivariate-generative-models"><span class="header-section-number">3.2</span> Multivariate generative models</h2>
+<p>In all previous examples, we have ignored the relationships between the variables. Typically, we can model the multivariate distribution of the data through a series of conditional distributions. In the next lecture, we will formalize these ideas, for now, it is sufficient to get the conceptual idea. When modelling the multivariate distribution with a series of conditional models, we essentially break down the problem of modelling the multivariate distribution to estimating a series of prediction models. To make sure that the synthetic values have sufficient variance, we add random noise to the predicted values from these models, such that the synthetic values are equal to the predicted values + some random error component. The simplest way to generate the synthetic values, is to build up the complexity of the prediction models such that every synthetic variable is generated on the basis of the previously synthesized variables. In our case, with only three variables, this would boil down to the following three models.</p>
+<ol type="1">
+<li><p>Generate <code>status</code> from a univariate distribution that is not conditional on any of the other variables (i.e., an intercept-only prediction model). Note that we have already done this, when we drew new synthetic <code>status</code> values from the binomial distribution.</p></li>
+<li><p>Generate <code>age</code> from a prediction model with <code>status</code> as a predictor variable.</p></li>
+<li><p>Generate <code>stay</code> from a prediction model with <code>status</code> and <code>age</code> as predictors.</p></li>
+</ol>
+<p>Note that we estimate these prediction models on the observed data, but use the synthetic versions of the independent variables to generate the synthetic values.</p>
+<hr>
+<section id="create-a-data.frame-called-syn-consisting-of-the-variable-status-which-is-our-previously-created-synthetic-status-variable." class="level4">
+<h4 class="anchored" data-anchor-id="create-a-data.frame-called-syn-consisting-of-the-variable-status-which-is-our-previously-created-synthetic-status-variable.">14. Create a <code>data.frame</code> called <code>syn</code> consisting of the variable <code>status</code>, which is our previously created synthetic status variable.</h4>
+<div class="callout callout-style-default callout-note no-icon callout-titled" title="Show me the answer!">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-12-contents" aria-controls="callout-12" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
 </div>
-</section>
-<section id="use-your-previously-created-status-variable-and-for-each-of-the-two-groups-draw-synthetic-values-for-age-and-stay." class="level3">
-<h3 class="anchored" data-anchor-id="use-your-previously-created-status-variable-and-for-each-of-the-two-groups-draw-synthetic-values-for-age-and-stay.">16. Use your previously created <code>status</code> variable, and for each of the two groups, draw synthetic values for <code>age</code> and <code>stay</code>.</h3>
-<p>Create a synthetic data set for the two groups separately. Draw these synthetic sets from a bivariate normal distribution, with the means and (co-)variances specified according to the just estimated values.</p>
-<p><em>Hint: You can use <code>rmvnorm</code> from the <code>mvtnorm</code>-package.</em></p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1"></a>syn_deceased <span class="ot">&lt;-</span> <span class="fu">rmvnorm</span>(</span>
-<span id="cb25-2"><a href="#cb25-2"></a>  <span class="at">n =</span> <span class="fu">sum</span>(syn_status <span class="sc">==</span> <span class="st">"deceased"</span>),</span>
-<span id="cb25-3"><a href="#cb25-3"></a>  <span class="at">mean =</span> means_deceased,</span>
-<span id="cb25-4"><a href="#cb25-4"></a>  <span class="at">sigma =</span> var_deceased</span>
-<span id="cb25-5"><a href="#cb25-5"></a>)</span>
-<span id="cb25-6"><a href="#cb25-6"></a>syn_recovered <span class="ot">&lt;-</span> <span class="fu">rmvnorm</span>(</span>
-<span id="cb25-7"><a href="#cb25-7"></a>  <span class="at">n =</span> <span class="fu">sum</span>(syn_status <span class="sc">==</span> <span class="st">"recovered"</span>),</span>
-<span id="cb25-8"><a href="#cb25-8"></a>  <span class="at">mean =</span> means_recovered,</span>
-<span id="cb25-9"><a href="#cb25-9"></a>  <span class="at">sigma =</span> var_recovered</span>
-<span id="cb25-10"><a href="#cb25-10"></a>)</span>
-<span id="cb25-11"><a href="#cb25-11"></a></span>
-<span id="cb25-12"><a href="#cb25-12"></a>syn <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(</span>
-<span id="cb25-13"><a href="#cb25-13"></a>  <span class="st">"deceased"</span> <span class="ot">=</span> <span class="fu">data.frame</span>(syn_deceased),</span>
-<span id="cb25-14"><a href="#cb25-14"></a>  <span class="st">"recovered"</span> <span class="ot">=</span> <span class="fu">data.frame</span>(syn_recovered),</span>
-<span id="cb25-15"><a href="#cb25-15"></a>  <span class="at">.id =</span> <span class="st">"status"</span></span>
-<span id="cb25-16"><a href="#cb25-16"></a>) <span class="sc">|&gt;</span></span>
-<span id="cb25-17"><a href="#cb25-17"></a>  <span class="fu">mutate</span>(</span>
-<span id="cb25-18"><a href="#cb25-18"></a>    <span class="at">status =</span> <span class="fu">factor</span>(status),</span>
-<span id="cb25-19"><a href="#cb25-19"></a>    <span class="at">age =</span> <span class="fu">round</span>(age),</span>
-<span id="cb25-20"><a href="#cb25-20"></a>    <span class="at">stay =</span> <span class="fu">exp</span>(stay) <span class="sc">|&gt;</span> <span class="fu">round</span>()</span>
-<span id="cb25-21"><a href="#cb25-21"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="callout-title-container flex-fill">
+Show me the answer!
 </div>
-</section>
-<section id="optional-compare-the-univariate-distributions-of-the-variables-in-your-final-synthetic-data-set-with-the-distributions-in-the-observed-data.-also-compare-the-correlations-between-the-variables.-how-good-is-the-synthetic-data" class="level3">
-<h3 class="anchored" data-anchor-id="optional-compare-the-univariate-distributions-of-the-variables-in-your-final-synthetic-data-set-with-the-distributions-in-the-observed-data.-also-compare-the-correlations-between-the-variables.-how-good-is-the-synthetic-data">17. OPTIONAL: Compare the univariate distributions of the variables in your final synthetic data set with the distributions in the observed data. Also compare the correlations between the variables. How good is the synthetic data?</h3>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-12" class="callout-12-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
 <div class="cell">
-<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1"></a><span class="fu">ggplot</span>() <span class="sc">+</span></span>
-<span id="cb26-2"><a href="#cb26-2"></a>  <span class="fu">geom_density</span>(<span class="fu">aes</span>(<span class="at">x =</span> disease<span class="sc">$</span>age, <span class="at">col =</span> <span class="st">"Observed"</span>)) <span class="sc">+</span></span>
-<span id="cb26-3"><a href="#cb26-3"></a>  <span class="fu">geom_density</span>(<span class="fu">aes</span>(<span class="at">x =</span> syn<span class="sc">$</span>age, <span class="at">col =</span> <span class="st">"Synthetic"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1"></a>syn <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">status =</span> syn_status)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</section>
+<section id="fit-a-linear-regression-model-with-age-as-dependent-variable-and-status-as-predictor-variable-using-the-observed-data." class="level4">
+<h4 class="anchored" data-anchor-id="fit-a-linear-regression-model-with-age-as-dependent-variable-and-status-as-predictor-variable-using-the-observed-data.">15. Fit a linear regression model with <code>age</code> as dependent variable and <code>status</code> as predictor variable using the observed data.</h4>
+<div class="callout callout-style-default callout-note no-icon callout-titled" title="Show me the answer!">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-13-contents" aria-controls="callout-13" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Show me the answer!
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-13" class="callout-13-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1"></a>fit_age <span class="ot">&lt;-</span> <span class="fu">lm</span>(age <span class="sc">~</span> status, disease)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</section>
+<section id="add-a-synthetic-age-variable-to-the-syn-data-set-by-using-the-fitted-regression-model-to-predict-age-values-for-the-synthetic-status-values.-add-noise-to-these-values-by-drawing-232-values-from-a-normal-distribution-with-a-mean-of-zero-and-a-standard-deviation-that-is-equal-to-the-residual-standard-deviation." class="level4">
+<h4 class="anchored" data-anchor-id="add-a-synthetic-age-variable-to-the-syn-data-set-by-using-the-fitted-regression-model-to-predict-age-values-for-the-synthetic-status-values.-add-noise-to-these-values-by-drawing-232-values-from-a-normal-distribution-with-a-mean-of-zero-and-a-standard-deviation-that-is-equal-to-the-residual-standard-deviation.">16. Add a synthetic <code>age</code> variable to the <code>syn</code> data set by using the fitted regression model to predict age values for the synthetic <code>status</code> values. Add noise to these values by drawing 232 values from a normal distribution with a mean of zero, and a standard deviation that is equal to the residual standard deviation.</h4>
+<div class="callout callout-style-default callout-note no-icon callout-titled" title="Show me the answer!">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-14-contents" aria-controls="callout-14" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Show me the answer!
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-14" class="callout-14-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1"></a>syn<span class="sc">$</span>age <span class="ot">&lt;-</span> <span class="fu">predict</span>(fit_age, <span class="at">newdata =</span> syn) <span class="sc">+</span> <span class="fu">rnorm</span>(n, <span class="at">mean =</span> <span class="dv">0</span>, <span class="at">sd =</span> <span class="fu">sd</span>(fit_age<span class="sc">$</span>residuals))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</section>
+<section id="do-the-same-thing-for-the-variable-stay-but-with-status-and-age-as-predictor-variables.-make-sure-to-log-transform-stay-before-fitting-the-regression-model-and-to-take-the-exponent-of-the-synthetic-values-before-adding-these-to-the-syn-data-set." class="level4">
+<h4 class="anchored" data-anchor-id="do-the-same-thing-for-the-variable-stay-but-with-status-and-age-as-predictor-variables.-make-sure-to-log-transform-stay-before-fitting-the-regression-model-and-to-take-the-exponent-of-the-synthetic-values-before-adding-these-to-the-syn-data-set.">17. Do the same thing for the variable <code>stay</code>, but with <code>status</code> and <code>age</code> as predictor variables. Make sure to log-transform <code>stay</code> before fitting the regression model, and to take the exponent of the synthetic values before adding these to the <code>syn</code> data set.</h4>
+<div class="callout callout-style-default callout-note no-icon callout-titled" title="Show me the answer!">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-15-contents" aria-controls="callout-15" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Show me the answer!
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-15" class="callout-15-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1"></a>fit_stay <span class="ot">&lt;-</span> <span class="fu">lm</span>(<span class="fu">log</span>(stay) <span class="sc">~</span> status <span class="sc">+</span> age, disease)</span>
+<span id="cb23-2"><a href="#cb23-2"></a>syn<span class="sc">$</span>stay <span class="ot">&lt;-</span> <span class="fu">exp</span>(<span class="fu">predict</span>(fit_stay, <span class="at">newdata =</span> syn) <span class="sc">+</span> <span class="fu">rnorm</span>(n, <span class="at">mean =</span> <span class="dv">0</span>, <span class="at">sd =</span> <span class="fu">sd</span>(fit_stay<span class="sc">$</span>residuals)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
+<hr>
+<p>Congratulations, you have created your first synthetic data set! If you have any time left, you can explore how good your synthetic data is by comparing the distributions of the observed and synthetic data. You can also explore whether the relationships between the variables are now well preserved, for example by fitting a (logistic) regression model using one of the variables as the outcome, and the others as predictors.</p>
+<hr>
+</section>
+<section id="optional-compare-the-univariate-distributions-of-the-variables-in-your-final-synthetic-data-set-with-the-distributions-in-the-observed-data.-also-compare-the-correlations-between-the-variables.-how-good-is-the-synthetic-data" class="level4">
+<h4 class="anchored" data-anchor-id="optional-compare-the-univariate-distributions-of-the-variables-in-your-final-synthetic-data-set-with-the-distributions-in-the-observed-data.-also-compare-the-correlations-between-the-variables.-how-good-is-the-synthetic-data">17. OPTIONAL: Compare the univariate distributions of the variables in your final synthetic data set with the distributions in the observed data. Also compare the correlations between the variables. How good is the synthetic data?</h4>
+<div class="callout callout-style-default callout-note no-icon callout-titled" title="Show me the answer!">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-16-contents" aria-controls="callout-16" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Show me the answer!
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-16" class="callout-16-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1"></a><span class="fu">ggplot</span>() <span class="sc">+</span></span>
+<span id="cb24-2"><a href="#cb24-2"></a>  <span class="fu">geom_density</span>(<span class="fu">aes</span>(<span class="at">x =</span> disease<span class="sc">$</span>age, <span class="at">col =</span> <span class="st">"Observed"</span>)) <span class="sc">+</span></span>
+<span id="cb24-3"><a href="#cb24-3"></a>  <span class="fu">geom_density</span>(<span class="fu">aes</span>(<span class="at">x =</span> syn<span class="sc">$</span>age, <span class="at">col =</span> <span class="st">"Synthetic"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
-<p><img src="P1_files/figure-html/unnamed-chunk-17-1.png" class="img-fluid" width="672"></p>
+<p><img src="P1_files/figure-html/unnamed-chunk-21-1.png" class="img-fluid" width="672"></p>
 </div>
-<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1"></a><span class="fu">ggplot</span>() <span class="sc">+</span></span>
-<span id="cb27-2"><a href="#cb27-2"></a>  <span class="fu">geom_density</span>(<span class="fu">aes</span>(<span class="at">x =</span> disease<span class="sc">$</span>stay, <span class="at">col =</span> <span class="st">"Observed"</span>)) <span class="sc">+</span></span>
-<span id="cb27-3"><a href="#cb27-3"></a>  <span class="fu">geom_density</span>(<span class="fu">aes</span>(<span class="at">x =</span> syn<span class="sc">$</span>stay, <span class="at">col =</span> <span class="st">"Synthetic"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1"></a><span class="fu">ggplot</span>() <span class="sc">+</span></span>
+<span id="cb25-2"><a href="#cb25-2"></a>  <span class="fu">geom_density</span>(<span class="fu">aes</span>(<span class="at">x =</span> disease<span class="sc">$</span>stay, <span class="at">col =</span> <span class="st">"Observed"</span>)) <span class="sc">+</span></span>
+<span id="cb25-3"><a href="#cb25-3"></a>  <span class="fu">geom_density</span>(<span class="fu">aes</span>(<span class="at">x =</span> syn<span class="sc">$</span>stay, <span class="at">col =</span> <span class="st">"Synthetic"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
-<p><img src="P1_files/figure-html/unnamed-chunk-17-2.png" class="img-fluid" width="672"></p>
+<p><img src="P1_files/figure-html/unnamed-chunk-21-2.png" class="img-fluid" width="672"></p>
 </div>
-<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1"></a><span class="fu">cor</span>(<span class="fu">sapply</span>(disease, as.numeric))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1"></a><span class="fu">cor</span>(<span class="fu">sapply</span>(disease, as.numeric))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>           status        age       stay
-status  1.0000000  0.3010599 -0.1313469
-age     0.3010599  1.0000000 -0.0257513
-stay   -0.1313469 -0.0257513  1.0000000</code></pre>
+status  1.0000000 -0.4592492 -0.1313469
+age    -0.4592492  1.0000000  0.3648052
+stay   -0.1313469  0.3648052  1.0000000</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1"></a><span class="fu">cor</span>(<span class="fu">sapply</span>(syn, as.numeric))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1"></a><span class="fu">cor</span>(<span class="fu">sapply</span>(syn, as.numeric))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>            status          age         stay
-status  1.00000000  0.341287830 -0.060386533
-age     0.34128783  1.000000000 -0.008524173
-stay   -0.06038653 -0.008524173  1.000000000</code></pre>
+<pre><code>              status        age          stay
+status  1.0000000000 -0.4495970 -0.0007265506
+age    -0.4495969880  1.0000000  0.2615972204
+stay   -0.0007265506  0.2615972  1.0000000000</code></pre>
 </div>
 </div>
+</div>
+</div>
+</div>
+<hr>
+<p>— END OF PRACTICAL —</p>
+</section>
 </section>
 </section>
 
