@@ -9,12 +9,15 @@ disease <- tibble(
     replace = TRUE, 
     prob = c(0.2, 0.8)
   ) |> factor(),
-  stay = pmax(1, round(rlnorm(232, 1.3 + (2 - as.numeric(status)) * 0.5))), 
-  age = round(rnorm(232, 67 - (2 - as.numeric(status)) * 5, 5))
+  stay = pmax(1, round(rlnorm(232, 1.3 + (2 - as.numeric(status)) * 0.5))),
+  age_means = 67 + 3*(2 - as.numeric(status)) + 0.2 * stay + (0.4*(2 - as.numeric(status))*stay),
+  age = round(rnorm(232, age_means, 5))
 ) |>
   select(status, age, stay)
 
-glm(status ~ stay + age, data = disease, family = binomial) |>
+glm(status ~ stay*age, data = disease, family = binomial) |>
+  summary()
+lm(age ~ status*stay, disease) |>
   summary()
 
 summary(disease)
