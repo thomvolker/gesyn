@@ -6,22 +6,8 @@ format:
   revealjs:
     slide-number: true
     df-print: kable
+    bibliography: ../gesyn-literature.bib
 ---
-
-## Overview
-
-__Lecture 1 (day 1):__ Introduction to synthetic data
-
-__Lecture 2 (day 1):__ Generating synthetic data
-
-__Lecture 3 (day 2):__ Inferences from synthetic data
-
-__Lecture 4 (day 2):__ Evaluating the privacy-utility trade-off
-
-__Lecture 5 (day 3):__ Improving synthetic data quality
-
-__Lecture 6 (day 3):__ Advanced topics in data synthesis
-
 
 ## Introduction
 
@@ -46,6 +32,22 @@ Thom Volker ([t.b.volker@uu.nl](mailto:t.b.volker@uu.nl))
 
 My research revolves around an odd mix of things I find interesting (e.g., Bayesian stats, data privacy, synthetic data)
 
+# Who are you?
+
+## Overview
+
+__Lecture 1 (day 1):__ Introduction to synthetic data
+
+__Lecture 2 (day 1):__ Generating synthetic data
+
+__Lecture 3 (day 2):__ Inferences from synthetic data
+
+__Lecture 4 (day 2):__ Evaluating the privacy-utility trade-off
+
+__Lecture 5 (day 3):__ Improving synthetic data quality
+
+__Lecture 6 (day 3):__ Advanced topics in data synthesis
+
 
 # Course webpage
 
@@ -60,25 +62,39 @@ Introduction to synthetic data
 
 - What is synthetic data?
 
-- Can't we use other methods?
+- How can we generate synthetic data?
 
-- How is synthetic data related to other statistical techniques?
+- How can we balance privacy and utility?
 
-- How do we balance high-quality synthetic data with minimum disclosure risks?
+## Imagine ...
 
-# Example
+![Getty Images](files/segregation.jpg)
 
-Dutch Burn Center Beverwijk
+::: {.notes}
 
-## Other use-cases of synthetic data
+- You're a researcher, doing research into segregation
+- In collaboration with your national statistical institute, you have constructed a data set
+- Demographical information: age, gender, income, ethnicity 
+- But also: where do you live, how long have you lived there
+- Network data: who are important in your life, can you describe them?
 
-- Open science workflows
+- Imagine all the things you can do with this data: your own research, but the data is so rich, many researchers can use it for different purposes
+- Answering research questions, replicating original analysis, learn from the cool analysis procedure, test new complex models, use in education
+- How can you possibly share this data?
 
-- Temporary surrogate while waiting for real data
+:::
 
-- Educational purposes
+# Open data? Preferably not...
 
-- Model building pipelines
+But maybe synthetic data?
+
+::: {.notes}
+
+- The idea is that the synthetic data is almost as useful as the original data set, and can be used for the same purposes, but lowers the privacy risks substantially
+
+- The synthetic data can be seen as an alternative data set from the same population, consisting of different, imaginary individuals, who are as a group comparable with the original participants, up to some sampling error
+
+:::
 
 
 ## What is synthetic data?
@@ -93,11 +109,18 @@ Dutch Burn Center Beverwijk
 
 ::: {.callout-tip title="Definition"}
 
-Synthetic data is data that is generated from a model: _fake data, generated data, simulated data, digital twin_. 
+Synthetic data is data that is generated from a model: _fake data, generated data, simulated data, digital twin_.
 
 _As opposed to real, natural, collected data_
 
 ::: 
+
+<br>
+<br>
+
+::: {.aside}
+See @jordon2022synthetic for an introductory overview.
+:::
 
 
 # To create synthetic data, you need a __generative model__
@@ -118,27 +141,52 @@ Generative models learn the distribution of the data $\boldsymbol{X}$ given para
 
 ::: 
 
-## Example: Normal distribution
+# Synthetic data is just a form of data simulation
 
-A normal distribution with parameters $\theta = \{\mu, \sigma\}$.
+## Data simulation
+
+Select a generative model
+
+<br>
+
+Fix the parameters
+
+<br>
+
+The model and parameters establish the _ground truth_
+
+<br>
+
+::: {.callout-note}
+__Synthetic data__ is data simulation in which we __fix__ the model, and __estimate__ the parameters from the data
+:::
+
+## Example: Effective number of workhours {.smaller}
+
+__Data:__ Effective number of workhours under fulltime employment
+
+<br>
 
 ```{r}
 #| label: normal_data
 #| echo: false
 
-set.seed(123)
-X <- data.frame(X = rnorm(200, 1, 2))
-psych::describe(X) |> dplyr::select(n, mean, sd) |> round(3)
+set.seed(9)
+X <- data.frame(Workhours = rnorm(53, 40, 5))
+psych::describe(X) |> dplyr::select(N = n, Mean = mean, SD = sd) |> round(3)
 ```
+<br>
+
+__Model:__ A normal distribution with mean and standard deviation ($\theta = \{\mu, \sigma\}$).
 
 ```{r}
 #| label: generate-normal
 #| echo: true
-n <- 200
-mu <- 0.983
-sigma <- 1.886
+n <- 53
+mu <- 39.59
+sigma <- 4.98
 
-X_syn <- rnorm(n = n, mean = mu, sd = sigma)
+Syn_Workhours <- rnorm(n = n, mean = mu, sd = sigma)
 ```
 
 ## 
@@ -149,59 +197,73 @@ X_syn <- rnorm(n = n, mean = mu, sd = sigma)
 #| fig-align: center
 library(ggplot2)
 
-data.frame(X = c(X$X, X_syn),
-           group = rep(c("Real", "Synthetic"), c(100, 100))) |>
-  ggplot(aes(x = X, col = group, fill = group)) +
+data.frame(Workhours = c(X$Workhours, Syn_Workhours),
+           group = rep(c("Real", "Synthetic"), c(53, 53))) |>
+  ggplot(aes(x = Workhours, col = group, fill = group)) +
   geom_density(size = 1, alpha = 0.2) +
   theme_minimal() +
   scale_color_brewer(palette = "Blues") +
   scale_fill_brewer(palette = "Blues") +
-  xlab(expression(italic(X))) +
-  ylab(NULL) +
+  xlab("Workhours") +
+  ylab("Density") +
   theme(legend.title = element_blank())
 ```
 
-## Example: Histogram with bins and proportion
+## Example: Questionable research practices {.smaller}
 
-Histogram with $\theta = \{\text{bins}, \pi\}$
+__Data:__ How often in the past year have you conducted any of the following questionable research practices?
+
+<br>
 
 ```{r}
 #| label: histogram-prop
 #| echo: false
-X <- sample(1:7, size = 200, replace = TRUE, prob = dnorm(qnorm(1:7/8)))
-X_df <- matrix(table(X)) |>
-  t() |>
-  data.frame() |>
-  setNames(1:7)
 
-X_df/200
+categories <- c("Never", "1-2 times", "3-5 times", "5-10 times", "More than 10 times")
+
+QRP <- sample(
+  categories, 
+  size = 386, 
+  replace = TRUE, 
+  prob = c(70, 30, 20, 10, 5)
+) |>
+  factor(levels = categories)
+
+table(QRP) |>
+  prop.table() |>
+  matrix(dimnames = list(categories, NULL)) |>
+  t() |>
+  tibble::as_tibble() |>
+  round(3)
 ```
 
 <br>
-<br>
+
+__Model:__ A histogram with bins and proportions (parameters $\theta = \{\text{bins}, \pi\}$).
+
 
 ```{r}
 #| label: histogram-params
 #| echo: true
-n <- 200
-bins <- 1:7
-props <- c(table(X)) / n
+n <- 386
+bins <- c("Never", "1-2 times", "3-5 times", "5-10 times", "More than 10 times")
+props <- c(.503, .246, .153, .078, 0.021)
 
-X_syn <- sample(bins, size = 200, replace = TRUE, prob = props)
+Syn_QRP <- sample(bins, size = 386, replace = TRUE, prob = props)
 ```
 
 
 ##
 
 ```{r}
-data.frame(X = c(X, X_syn),
-           group = rep(c("Real", "Synthetic"), c(100, 100))) |>
-  ggplot(aes(x = X, fill = group)) +
-  geom_histogram(position = "dodge") +
+data.frame(QRP = c(QRP, factor(Syn_QRP, levels = categories)),
+           group = rep(c("Real", "Synthetic"), c(386, 386))) |>
+  ggplot(aes(x = QRP, fill = group)) +
+  geom_histogram(stat = "count", position = "dodge") +
   theme_minimal() +
   scale_fill_brewer(palette = "Blues") +
-  xlab(expression(italic(X))) +
-  ylab(NULL) +
+  xlab("QRP") +
+  ylab("Count") +
   theme(legend.title = element_blank())
 ```
 
@@ -225,23 +287,73 @@ All have their pros and cons.
 
 <br>
 
-More about this later.
-
-# Traditional disclosure control methods
+More about the methods later.
 
 
 
+# The privacy-utility trade-off
+
+Synthetic data is always a compromise between protecting privacy and achieving high utility
+
+# Any attempt at protecting privacy will result in losing information
+
+## Privacy and utility are opposites
+
+<br>
+
+![](files/pu_arrow.jpg)
+
+<br>
+
+The question is: how much information do we need to sacrifice to protect the privacy of the respondents?
 
 
+Or: what level of disclosure risk is acceptable to keep a data set that is as useful as possible?
+
+## Utility vs. privacy
+
+- Every parameter in the generative model contains information about the observations in the real data
+
+- The more parameters (information) you use to generate synthetic data, the more utility it will have
+
+- When the information in the parameters equals the information in the real data, we have just recreated the real data
+
+- At that point, there is no more privacy / disclosure control
+
+## Utility versus privacy
 
 
+```{r}
+#| echo: false
+set.seed(9)
+n <- 10
+x <- seq(0, 4, length.out = n)
+y <- sin(x) + rnorm(n, 0, 0.2)
 
-## Statistical disclosure limitation
+fit1  <- lm(y ~ x)
+pred1 <- predict(fit1, interval = "p")
+fit2x <- data.frame(poly(x, 9, raw = TRUE)) |> as.matrix()
+fit2  <- lm(y ~ fit2x)
+predx <- seq(0, 4, length.out = 1000) |> poly(9, raw = TRUE)
+pred2 <- cbind(1, predx) %*% coef(fit2)
 
-## Why synthetic data then?
+ggplot(NULL, aes(x, y)) +
+  geom_point() +
+  geom_ribbon(aes(ymin = pred1[,2], ymax = pred1[,3], 
+                  col = "Underparameterized"), alpha = 0.1) +
+  geom_abline(col = RColorBrewer::brewer.pal(3, "Set1")[2], 
+              slope = fit1$coefficients[2], intercept = fit1$coefficients[1]) +
+  geom_line(aes(x = seq(0, 4, length.out = 1000), y = pred2[,1], 
+                col = "Overparameterized",
+                fill = "Overparameterized")) +
+  geom_function(aes(x = NULL, y = NULL), fun = sin) +
+  theme_minimal() +
+  scale_color_brewer(name = "Model", palette = "Set1")
+```
+
+
 
 ## Literature
-
 
 
 
