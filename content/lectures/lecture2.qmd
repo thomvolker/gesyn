@@ -1,0 +1,448 @@
+---
+title: "Synthetic data: Generation and Evaluation"
+subtitle: "Lecture 2 - The history of synthetic data"
+author: "Thom Benjamin Volker<br>Utrecht University, Statistics Netherlands"
+format: 
+  revealjs:
+    slide-number: true
+    df-print: kable
+    bibliography: ../gesyn-literature.bib
+---
+
+# Lecture 2
+
+Generating synthetic data
+
+- Classical disclosure control approaches
+
+- History of synthetic data
+
+- Advantages and disadvantages of synthetic data
+
+- Analyses with synthetic data
+
+## Data privacy is hot (since ~2000)
+
+Scientific articles on "data privacy"
+
+![](files/data_privacy_trend.jpg)
+
+::: {.notes}
+
+Data privacy is a hot topic, and the number of scientific articles on this topic has exploded. 
+However, this interest sparked since about the year 2000 only.
+Not coincidentally, I suppose, the internet got increasingly popular since that period, and the rate of data collection increased tremendously just before that period as well, with the introduction of digital data storage opportunities.
+Rather than analogous storage, such as paper copies, it became possible to store information digitally, and share information over the internet.
+
+:::
+
+## Early data collection
+
+Data collection is something of all times
+
+<br>
+
+In the past thousands of years mainly by statistical institutes / governmental organizations
+
+
+<br>
+
+Only confidentiality breaches: data sharing with other governments
+
+<br> 
+
+Little privacy risk: only aggregate statistics
+
+::: {.notes}
+National statistical institutes, or before they were called like that, just "the government" collect data for thousands of years. 
+Early data collection can be traced back to at least 5000 years ago, where ancient Samarians, in the region currently known as Iraq, collected data on harvests and taxes. 
+Data collection on taxes and the like continued for thousands of years, until eventually other forms of data collection started to take place. 
+Such data collection efforts can be censuses, where countries recorded statistics of their population, such as ages and gender. 
+Additionally, data for public health was collected, such as deaths in specific neighborhoods, causes of death and mortality rates among age groups.
+However, most of these data where collected by statistical institutes, or governmental institutions in general. 
+Although such data could potentially contain some sensitive information, or information that individuals might not have wanted to disclose, the data was considered relatively safe, because it was not published openly. 
+Only people working at the statistical institutes had access to the data, but the data was not publicly available in general (also because there was no way to share such data). 
+At worst, these data were shared with different governments, but typically not with the public. 
+What was shared with the public, was just summary statistics, e.g., frequencies of people in a particular neighborhood, in a particular age range.
+:::
+
+## Early disclosure control
+
+Even aggregate statistics can be revealing
+
+<br>
+
+Early statistical disclosure limitation methods focused on protecting aggregate statistics (means, counts)
+
+<br>
+
+Ways to deal with disclosure risks in tabular data: global recoding, cell suppression, perturbative methods.
+
+<br>
+
+Many different ways to implement these methods, see @hundepool_sdc_2012, Chapters 4-5.
+
+::: {.notes}
+Consider the case that an aggregate statistic consists of only two people. If you are one of them, you can infer with certainty what the other person's value is. 
+If there is a very small area with just two inhabitants, and you get an average income in that area, knowing my own income, I can infer the other person's income. 
+So also such aggregate statistics can yield disclosure risks.
+There are several ways to deal with disclosure risks of tabular data, for example, global recoding (collapsing small categories in a broader one), cell suppression (all cells in a table for which a disclosure risk has been identified are discarded from the table, and simply no information is provided), perturbative methods (add noise to the published statistics, this can be random noise from some distribution, but also through rounding). 
+There are many different ways to implement these methods, but I won't go into the details, because we will not focus on tabular data. 
+:::
+
+## Microdata confidentiality
+
+Increase in (micro-)data collection, storage and analysis
+
+<br>
+
+How to share collected information without sacrificing privacy?
+
+<br>
+
+Microdata protection:
+
+- Information reduction
+- Data perturbation
+
+
+
+:::{.notes}
+As we saw, the scale of data collection, storage and analysis exploded over the past thirty years, which required new methods for data protection.
+These data are not only collected by governments, but mainly by corporate organizations, internet data, supermarkets, etc.
+The question is how the potential of these data can be used to the fullest, without violating the privacy of the respondents. 
+This question sparked a good amount of scientific interest, and led to research on methods for microdata confidentiality from the eighties onwards. 
+In general, there are two classes of microdata protection methods: information reduction and data perturbation. 
+:::
+
+## Information reduction {.smaller}
+
+:::: {.columns}
+
+::: {.column width="60%"}
+- Top coding: capping values above a threshold
+- Cell suppression: not sharing any information some of the cells
+- Coarsening categorical variables: making new overarching categories
+- Categorizing continuous variables: e.g., making age groups
+- Rounding: round values to some base (1, 5, 10, ...)
+- Dropping variables
+
+See @hundepool_sdc_2012, Chapter 3.
+
+:::
+
+::: {.column width="40%"}
+
+```{r}
+data.frame(X1 = c(1.1, 2.12, 13.5, 8.7),
+           X2 = c("A", "C", "B", "B"),
+           X3 = c("Yes", "No", "No", "No"))
+
+data.frame(X1a = c("1", "2", "10+", "9"),
+           X2a = c("A", "B/C", "B/C", "B/C"),
+           X3a = NA)
+```
+
+
+:::
+
+::::
+
+:::{.notes}
+Explain these methods
+The advantage is that all data that is actually released is "real", in the sense that all observations retain their true scores (albeit possibly in a different category, or in a coarser version).
+However, the downside is that a lot of information might be lost. In fact, so much information might be lost that the data that is eventually disseminated is close to useless, because so much information is withdrawn from the data file.
+:::
+
+## Data perturbation
+
+No information is suppressed, but records are altered to protect privacy
+
+- Swapping (exchanging values of sensitive/confidential attributes among individual observations)
+- Adding noise
+- Microaggregation (make small groups with the mean of that group)
+
+::: {.notes}
+Explain methods
+The advantage is that no information is lost, in the sense of categories or cells or even variables
+But there is information lost in the sense of data that have been altered to something that is not the true value. 
+If these methods are not implemented taking the relationships in the data into account, relationships between variables that are found in the original data can be distorted.
+That is, if the added noise does not take correlations into account, the addition of random noise lowers the correlations between variables.
+:::
+
+## Remote analysis
+
+Another solution to data privacy is remote access
+
+<br>
+
+Often cumbersome in practice: researchers need individual agreements
+
+<br> 
+
+Unforeseen problems with the data are hard to solve
+
+## Why do we need synthetic data?
+
+<br>
+
+Traditional approaches are hard to implement in a good way
+
+<br> 
+
+Need custom made analysis techniques, or reduce the analytic quality of the data tremendously
+
+<br>
+
+Synthetic data can be a straightforward solution
+
+## Synthetic data for disclosure control
+
+Synthetic data is closely related to multiple imputation for missing data
+
+<br>
+
+Rather than replacing missing values, sensitive / identifying values are imputed
+
+<br>
+
+With multiple draws from a model fitted to the observed data
+
+<br>
+
+Multiple draws enable valid inferences (i.e., correct standard errors; more about this tomorrow)
+
+# Two main approaches for synthetic data
+
+Fully synthetic data
+
+Partially synthetic data
+
+See @drechsler_synthetic_2011 for a thorough review.
+
+## Fully synthetic data
+
+Idea due to @rubin_synthetic_1993, inspired by multiple imputation for missing data
+
+Approach:
+
+- Treat entire population except observed sample as missing data
+
+- Impute the missing data with multiple imputation (synthetic populations)
+
+- Sample from the synthetic population
+
+## Fully synthetic data {.smaller}
+
+```{r}
+data.frame(X = paste0("X", 1:10),
+           Y1 = c("", "", "", "", "Synthetic", "Synthetic", "", "", "Observed", "Observed"),
+           Y2 = c("", "", "", "", "Synthetic", "Synthetic", "", "", "Observed", "Observed"),
+           Y3 = c("", "", "", "", "Synthetic", "Synthetic", "", "", "Observed", "Observed"))
+```
+
+## Advantages and disadvantages
+
+__Advantages__
+
+- Almost no risk of re-identification
+- No need to think about sensitive/identifying attributes
+- All variables remain available
+- Relationships between variables are preserved
+- Easy to obtain valid inferences
+
+__Disadvantages__
+
+- Everything depends on the imputation model
+
+::: {.notes}
+Advantages: everything is synthetic, which implies quite good protection, which having to think which variables or combinations of values can be considered disclosive. The level of protection does not depend on any auxiliary information that is shared, or the imputation models that are used. All information is in principle available, and it is very easy to obtain valid inferences, if the imputation models have been specified well. 
+Under the assumption of correct imputation models, the approach preserves all relationships between variables, as well as univariate statistics, and only adds a little bit of variance to these quantities. 
+However, this all rests on the assumption that the imputation models are correctly specified. Under poor imputation models, the results cannot be trusted at all, and the synthetic data may not look like the observed data at all.
+:::
+
+## Partially synthetic data
+
+Idea due to @little_synthetic_1993, who noted that not all information in a dataset is disclosive and/or sensitive
+
+<br>
+
+Not necessary to synthesize all variables and all records
+
+<br>
+
+Replace only those variables that are sensitive, or that bear a high risk of leading to reidentification
+
+<br>
+
+Or even replace only those values that we think are disclosive (e.g., values in the tails)
+
+## Advantages and disadvantages
+
+The more we leave unaltered, the higher the analytic validity
+
+__Advantages__
+
+- The imputation models have less influence
+- The models are easier to specify
+
+__Disadvantages__
+
+- Disclosure risks remain (linking to external data sources, identifying variables are accidentally not synthesized)
+
+__Evaluation of remaining disclosure risks is very important!__
+
+## Advantages of synthetic data
+
+Multivariate relationships are preserved
+
+Variable types are preserved
+
+Better able to deal with practical problems like:
+
+- Nonresponse
+- Skip patterns
+- Logical constraints
+
+Transparent procedure: the entire modelling _procedure_ can be shared with the public, which helps researchers to decide what the data _can_ and _cannot_ be used for
+
+## Disadvantages of synthetic data
+
+<br>
+
+Data quality very much depends on the imputation model
+
+- Ill-fitting models: poor data quality
+
+- Only aspects that are modelled explicitly are preserved
+
+<br>
+
+Modelling procedure is quite involved
+
+# Inferences from synthetic data
+
+## Analysing synthetic datasets
+
+Similar to analyzing multiple imputed datasets
+
+- Do normal statistical analysis on each synthetic dataset
+
+- Pool the results into a final estimate
+
+But: pooling rules differ per synthesizing strategy
+
+## Some terminology
+
+The quantities we need
+
+- $m$: synthetic datasets ($j = 1, \dots, m$)
+- $Q$: parameter(s) of interest
+- $q_j$: point estimate obtained from synthetic dataset $j$
+- $u_j$: variance estimate obtained from synthetic dataset $j$
+
+## Example - linear regression
+
+$m$ synthetic datasets.
+
+$Q$ denotes the true regression weights $\beta_0$ and $\beta_1$
+
+<br>
+
+Then, $q_j$ denotes the estimated regression weights in synthetic dataset $j$
+
+- $\hat{\beta}_{0,j}$ and $\hat{\beta}_{1,j}$.
+
+
+And $u_j$ denotes the squared standard errors 
+
+- $SE(\beta_{0,j})^2 = Var(\beta_{0,j})$ and  $SE(\beta_{1,j})^2 = Var(\beta_{1,j})$.
+
+## Quantities we need for inferences
+
+
+$$\begin{aligned}
+\bar{q}_m &= \sum^m_{j=1} q_j/m ~~~~~~ (\text{e.g.,} ~~
+(\hat{\beta}_{0,1} + \dots + \hat{\beta}_{0,m})/m) \\ \\
+\bar{u}_m &= \sum^m_{j=1} u_j/m ~~~~~~ (\text{e.g.,} ~~
+(Var[\hat{\beta}_{0,1}] + \dots + Var[\hat{\beta}_{0,m}])/m)\\ \\
+b_m &= \sum^m_{j=1} (q_j - \bar{q}_m)^2 / (m-1)
+\end{aligned}$$
+
+## Inferences from fully synthetic datasets
+
+The quantity of interest $Q$ is estimated as
+$$\bar{q}_m = \sum^m_{j=1} q_j/m,$$
+with total variance [@raghunathan_sdl_2003]
+$$T_f = b_m + b_m/m - \bar{u}_m,$$
+such that the standard error of the estimate is given by $\sqrt{T_f}$.
+
+:::{.notes}
+Note here that for fully synthetic data, the between imputation variance also captures the sampling variability, because we treat the population as missing data and draw new samples from this imputed population.
+:::
+
+## Inferences from fully synthetic datasets
+
+For large enough sample sizes, inferences can be based on a $t$-distribution
+$$(\bar{q}_m - Q) \sim t_{\nu_f}(0, T_f),$$
+with degrees of freedom
+$$
+\nu_f = (m-1)\bigg(1 - \frac{\bar{u}_m}{(b_m + b_m/m)}\bigg)^2.
+$$
+
+## Inferences from fully synthetic datasets
+
+Note that the total variance $T_f$ can become negative.
+
+$$T_f = b_m + b_m/m - \bar{u}_m,$$
+
+This can typically be remedied by increasing $m$, but a modified estimator can be obtained as
+
+$$T_{f}^{(0)} = \frac{n_{syn}}{n} \bar{u}_m$$
+if $T_f \leq 0$.
+
+## Inferences from partially synthetic datasets
+
+The quantity of interest $Q$ is estimated as
+$$\bar{q}_m = \sum^m_{j=1} q_j/m,$$
+with total variance [@reiter2003inference]
+$$T_p =  \bar{u}_m + b_m/m,$$
+such that the standard error of the estimate is given by $\sqrt{T_p}$.
+
+:::{.notes}
+Note that the variance tends to the regular sampling variance if we take an infinite number of synthetic datasets.
+:::
+
+## Inferences from partially synthetic datasets
+
+For large enough sample sizes, inferences can be based on a $t$-distribution
+$$(\bar{q}_m - Q) \sim t_{\nu_p}(0, T_p),$$
+with degrees of freedom
+$$
+\nu_p = (m-1)\bigg(1 + \frac{\bar{u}_m}{(b_m/m)}\bigg)^2.
+$$
+
+:::{.notes}
+Remark that this estimator has typically smaller variance, and larger degrees degrees of freedom, such that estimation is more efficient.
+Also, the variance estimate can never become negative.
+:::
+
+## Another variance expression
+
+If the synthetic data is completely synthesized,
+
+Or if the unsynthesized variables are in the synthesis model and in the analysis model,
+
+A more efficient variance estimator is available [@Raab_Nowok_Dibben_2018]:
+
+$$T_s = \bar{u}_m + \bar{u}_m/m,$$
+which requires only a single synthetic dataset.
+
+
+## Literature
+
+
+
+
+
+
