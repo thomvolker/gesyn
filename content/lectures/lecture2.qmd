@@ -11,7 +11,7 @@ format:
 
 # Lecture 2
 
-Generating synthetic data
+The history of synthetic data
 
 - Classical disclosure control approaches
 
