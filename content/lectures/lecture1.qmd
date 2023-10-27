@@ -1,7 +1,7 @@
 ---
 title: "Synthetic data: Generation and Evaluation"
+subtitle: "Lecture 1 - Introduction to synthetic data"
 author: "Thom Benjamin Volker<br>Utrecht University, Statistics Netherlands"
-affiliation: "Utrecht University, Statistics Netherlands"
 format: 
   revealjs:
     slide-number: true
